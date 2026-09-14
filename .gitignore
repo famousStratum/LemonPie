@@ -1,0 +1,33 @@
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Python build artifacts
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Packaging output
+dist/
+build/
+*.egg-info/
+
+# Runtime artifacts
+sessions/*
+!sessions/.gitkeep
+*.log
+*.tmp
+
+# IDE/editor files
+.vscode/
+.idea/
+*.swp
+
+# OS temporary files
+.DS_Store
+Thumbs.db
+
+# Secrets & Environment Variables
+.env

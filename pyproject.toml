@@ -1,0 +1,24 @@
+[project]
+name = "lemonpie"
+version = "0.1.0"
+description = "The ultra-lightweight Ollama session manager for terminal workflows"
+authors = [
+  { name = "famousStratum", email = "info@versicode.com" }
+]
+readme = "README.md"
+license = { text = "GPL-3.0-or-later" }
+requires-python = ">=3.8"
+
+dependencies = [
+  "ollama"
+]
+
+[project.urls]
+homepage = "https://versicode.com/lemonpie"
+repository = "https://github.com/famousStratum/lemonpie"
+issues = "https://github.com/famousStratum/lemonpie/issues"
+
+[project.scripts]
+lm = "lm:main"
+lemonpie = "lm:main"
+lmConfig = "lmConfig:main"
