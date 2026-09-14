@@ -82,6 +82,33 @@ models: list of objects with alias (nullable) and name
 `lmConfig --remove-model qwen`
 
 
+## 🗺 Roadmap
+
+Planned features and improvements:
+
+- `lmConfig --init`  
+  Interactive setup command that:
+  - Prompts for Ollama server IP:port
+  - Verifies server reachability
+  - Lists available models if server responds
+  - Allows user to select models to add
+  - Handles cases where no models are found (with guidance to Ollama docs)
+  - Supports `--force` to override verification or alias conflicts
+
+- Model verification state machine  
+  Planned logic for `lmConfig --add-model`:
+  - Check server reachability
+  - Verify if model is installed
+  - Offer to pull missing models
+  - Handle pull success/failure and user choice
+  - Respect `--force` for overriding conflicts or skipping checks  
+  *(See docs/design/state-machine.md for full diagram once published)*
+
+- Enhanced error handling and user feedback
+- Packaging for Debian Trixie (`.deb` via apt)
+- Future schema validation for config/session files
+
+
 ---
 
 ## 📜 License
