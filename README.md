@@ -91,9 +91,3 @@ This project is licensed under the **GNU General Public License v3.0** (**GPLv3*
 
 ---
 
-## 🤝 Contributing
-
-Issues and pull requests are welcome. Please use lmConfig.py to manage configuration rather than editing config.json manually.
-
-
----
