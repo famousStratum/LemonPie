@@ -105,6 +105,10 @@ Planned features and improvements:
   *(See docs/design/state-machine.md for full diagram once published)*
 
 - Enhanced error handling and user feedback
+  - Graceful handling of server errors (HTTP codes, non‑JSON responses)
+  - Null vs empty string distinction for defaults
+  - Clearer guidance messages when config is missing or invalid
+
 - Packaging for Debian Trixie (`.deb` via apt)
 - Future schema validation for config/session files
 
