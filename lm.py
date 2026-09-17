@@ -66,7 +66,7 @@ Notes for maintainers
 
 """
 
-import sys, json, argparse, os
+import argparse, errno, httpx, json, os, sys, time
 from datetime import datetime, timezone
 from ollama import Client
 
@@ -75,11 +75,13 @@ base_dir = os.path.dirname(os.path.abspath(__file__))
 with open(os.path.join(base_dir, "config.json")) as f:
     cfg = json.load(f)
 
-client = Client(host=os.environ.get("OLLAMA_HOST") or cfg.get("server"))
+server_host = os.environ.get("OLLAMA_HOST") or cfg.get("server")
+timeout = httpx.Timeout(connect=5.0, read=600.0, write=30.0, pool=5.0)
+client = Client(host=server_host, timeout=timeout)
 
 # Expose models and default as before but adapted to new shape
 models_list = cfg["models"]            # list of {alias,name}
-default_model_name = cfg.get("default")  # canonical model name (full identifier)
+default_model_name = cfg.get("default") or None # canonical model name (full identifier)
 
 SESSIONS_DIR = os.path.join(os.path.dirname(__file__), "sessions")
 os.makedirs(SESSIONS_DIR, exist_ok=True)
@@ -207,6 +209,16 @@ def find_by_name(cfg, name):
             return m
     return None
 
+def animate_status(msg, duration=5):
+    dots = ""
+    for _ in range(duration):
+        dots = (dots + ".") if len(dots) < 3 else ""
+        sys.stdout.write("\r" + msg + dots + "   ")
+        sys.stdout.flush()
+        time.sleep(0.5)
+    sys.stdout.write("\r" + " " * (len(msg)+5) + "\r")  # clear line
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("-m", "--model", help="Model alias or full name", default=None)
@@ -237,6 +249,10 @@ if __name__ == "__main__":
     else:
         # No explicit -m: use configured default model name (may be None)
         model = default_model_name
+        if model is None:
+            print("No default model configured.")
+            print("Use lmConfig to add one or pass a known alias with -m.")
+            sys.exit(1)
 
     # Resolve current session id from file
     current_id = read_current()
@@ -379,6 +395,16 @@ if __name__ == "__main__":
         assistant_reply = ""
         reply_ts = None
         try:
+            print("Connecting...", end="", flush=True)
+            # run connect attempt here
+            animate_status("Connecting", duration=10)
+
+            print("Connected. Waiting for model response...", end="", flush=True)
+            animate_status("Connected. Waiting for model response", duration=20)
+
+            # Once first token arrives:
+            sys.stdout.write("\r")  # clear status line
+
             stream = client.chat(model=model, messages=session["history"], stream=True)
 
             for chunk in stream:
@@ -429,7 +455,16 @@ if __name__ == "__main__":
             sys.exit(1)
 
         except Exception as e:
-            print("\nFailed to contact Ollama server:", e)
+            msg = str(e)
+            if "[Errno 111]" in msg or "Connection refused" in msg:
+                print("\nFailed to contact Ollama server: Connection refused.")
+                print("Hint: Ollama may not be running, or it may not be listening on:", server_host)
+                print("Check that the server is started with `ollama serve` and bound to the correct interface.")
+            elif "[Errno 110]" in msg or "timed out" in msg.lower():
+                print("\nFailed to contact Ollama server: Connection timed out.")
+                print("Hint: The server at", server_host, "is unreachable. Verify IP/port and network.")
+            else:
+                print("\nFailed to contact Ollama server:", msg)
             sys.exit(1)
 
         # Save the final assistant reply
