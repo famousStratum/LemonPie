@@ -1,27 +1,27 @@
 #!/usr/bin/env python3
 """
-lmConfig.py — manage LemonPie config.json safely
+lm_config.py (alias: lmConfig) — manage LemonPie config.json safely
 
 Usage examples:
   # Set Ollama host URL
-  lmConfig.py --host http://192.168.1.252:11434
+  lmConfig --host http://192.168.1.252:11434
 
   # Add a model object (alias -> full model name)
-  lmConfig.py --add-model qwen qwen2.5-coder:1.5b-base
+  lmConfig --add-model qwen qwen2.5-coder:1.5b-base
 
   # Reassign an alias to a different model (use --force to reassign)
-  lmConfig.py --add-model qwen qwen2.5-coder:3b --force
+  lmConfig --add-model qwen qwen2.5-coder:3b --force
 
   # Set default model by alias or by full model name
-  lmConfig.py --default-model qwen
-  lmConfig.py --default-model qwen2.5-coder:3b
+  lmConfig --default-model qwen
+  lmConfig --default-model qwen2.5-coder:3b
 
   # Remove a model or clear an alias
-  lmConfig.py --remove-model qwen                 # clears alias (model remains, alias -> null)
-  lmConfig.py --remove-model qwen2.5-coder:3b     # removes the model record entirely
+  lmConfig --remove-model qwen                 # clears alias (model remains, alias -> null)
+  lmConfig --remove-model qwen2.5-coder:3b     # removes the model record entirely
 
   # List configured models (shows alias or <none> and marks default by model name)
-  lmConfig.py --list-models
+  lmConfig --list-models
 
 Behavior and data model
   - Config now stores models as a list of objects:
@@ -48,16 +48,13 @@ import json
 import os
 import sys
 from urllib.parse import urlparse
-
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-CONFIG_PATH = os.path.join(BASE_DIR, "config.json")
-
+from lemonpie.paths import CONFIG_FILE
 
 def load_config():
-    if not os.path.exists(CONFIG_PATH):
+    if not os.path.exists(CONFIG_FILE):
         # default structure uses list-of-objects for models
         return {"server": None, "default": None, "models": []}
-    with open(CONFIG_PATH, "r", encoding="utf-8") as f:
+    with open(CONFIG_FILE, "r", encoding="utf-8") as f:
         cfg = json.load(f)
 
     # Ensure structure keys exist
@@ -68,10 +65,10 @@ def load_config():
 
 
 def save_config(cfg):
-    tmp = CONFIG_PATH + ".tmp"
+    tmp = CONFIG_FILE + ".tmp"
     with open(tmp, "w", encoding="utf-8") as f:
         json.dump(cfg, f, indent=2, ensure_ascii=False)
-    os.replace(tmp, CONFIG_PATH)
+    os.replace(tmp, CONFIG_FILE)
 
 
 def find_by_alias(cfg, alias):
@@ -276,7 +273,7 @@ def cmd_show(cfg):
 
 
 def main(argv):
-    parser = argparse.ArgumentParser(prog="lmConfig", description="Manage lm-agent config.json")
+    parser = argparse.ArgumentParser(prog="lmConfig", description="Manage LemonPie configuration (config.json)")
     parser.add_argument("--host", help="Set Ollama host URL (http(s)://host:port)")
     parser.add_argument("--default-model", help="Set default model using alias or full name (must exist in models)")
     parser.add_argument("--add-model", nargs=2, metavar=("ALIAS", "MODEL"), help="Add model mapping: alias model_full_name")
