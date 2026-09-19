@@ -16,6 +16,10 @@ def build_parser():
     parser.add_argument("prompt", nargs="*", help="Prompt text")
     return parser
 
+def confirm(prompt):
+    ans = input(f"{prompt} (y/N): ").strip().lower()
+    return ans in ("y", "yes")
+
 def print_session(session):
     print(f"Session {session['id']} — {session.get('title') or '<no title>'}")
     for turn in session["history"]:

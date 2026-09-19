@@ -1,6 +1,8 @@
 import sys
 
+
 from lemonpie.session_utils import save_session
+
 
 def handle_model_switch(cfg, session, requested_model):
     """
@@ -33,17 +35,20 @@ def handle_model_switch(cfg, session, requested_model):
 
     return session
 
+
 def find_by_alias(cfg, alias):
-    for m in cfg.get("models", []):
+    for idx, m in enumerate(cfg.get("models", [])):
         if m.get("alias") == alias:
-            return m
-    return None
+            return idx, m
+    return None, None
+
 
 def find_by_name(cfg, name):
-    for m in cfg.get("models", []):
+    for idx, m in enumerate(cfg.get("models", [])):
         if m.get("name") == name:
-            return m
-    return None
+            return idx, m
+    return None, None
+
 
 def resolve_model(cfg, args_model, default_model_name):
     if args_model:

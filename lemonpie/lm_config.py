@@ -1,107 +1,31 @@
 #!/usr/bin/env python3
 """
-lm_config.py (alias: lmConfig) — manage LemonPie config.json safely
+lm_config.py (alias: lmConfig) — CLI for managing LemonPie configuration.
 
 Usage examples:
-  # Set Ollama host URL
-  lmConfig --host http://192.168.1.252:11434
-
-  # Add a model object (alias -> full model name)
-  lmConfig --add-model qwen qwen2.5-coder:1.5b-base
-
-  # Reassign an alias to a different model (use --force to reassign)
-  lmConfig --add-model qwen qwen2.5-coder:3b --force
-
-  # Set default model by alias or by full model name
-  lmConfig --default-model qwen
-  lmConfig --default-model qwen2.5-coder:3b
-
-  # Remove a model or clear an alias
-  lmConfig --remove-model qwen                 # clears alias (model remains, alias -> null)
-  lmConfig --remove-model qwen2.5-coder:3b     # removes the model record entirely
-
-  # List configured models (shows alias or <none> and marks default by model name)
-  lmConfig --list-models
-
-Behavior and data model
-  - Config now stores models as a list of objects:
-      "models": [
-        { "alias": "qwen", "name": "qwen2.5-coder:3b" },
-        { "alias": null,   "name": "qwen2.5-coder:1.5b-base" }
-      ]
-  - The default is stored as the canonical model name (full identifier), not an alias.
-  - --add-model checks the model name first, then the alias. Using --force will
-    reassign aliases: the previous alias is set to null (the model record is kept).
-  - The script will automatically migrate the old dict-style "alias: name"
-    mapping to the new list-of-objects format on first load.
-
-Notes for users and maintainers
-  - Use aliases for convenience; the canonical identity is the full model name.
-  - lm.py resolves aliases to model names; it accepts either an alias or a full
-    model name when switching models.
-  - Writes are atomic (tmp file + os.replace). Confirm destructive actions when prompted.
+  lmConfig --host http://127.0.0.1:11434           # Set Ollama server URL
+  lmConfig --add-model qwen qwen2.5-coder:3b       # Map an alias to a model
+  lmConfig --add-model qwen qwen2.5:1.5b --force   # Reassign an existing alias
+  lmConfig --default-model qwen                    # Set default by alias or name
+  lmConfig --remove-model qwen                     # Clear alias or remove model
+  lmConfig --list-models                           # View configured models
 """
 
-
-import argparse
-import json
-import os
-import sys
+import argparse, json, os, sys
 from urllib.parse import urlparse
+
 from lemonpie.paths import CONFIG_FILE
-
-def load_config():
-    if not os.path.exists(CONFIG_FILE):
-        # default structure uses list-of-objects for models
-        return {"server": None, "default": None, "models": []}
-    with open(CONFIG_FILE, "r", encoding="utf-8") as f:
-        cfg = json.load(f)
-
-    # Ensure structure keys exist
-    cfg.setdefault("server", None)
-    cfg.setdefault("default", None)
-    cfg.setdefault("models", [])
-    return cfg
-
-
-def save_config(cfg):
-    tmp = CONFIG_FILE + ".tmp"
-    with open(tmp, "w", encoding="utf-8") as f:
-        json.dump(cfg, f, indent=2, ensure_ascii=False)
-    os.replace(tmp, CONFIG_FILE)
-
-
-def find_by_alias(cfg, alias):
-    for idx, m in enumerate(cfg.get("models", [])):
-        if m.get("alias") == alias:
-            return idx, m
-    return None, None
-
-
-def find_by_name(cfg, name):
-    for idx, m in enumerate(cfg.get("models", [])):
-        if m.get("name") == name:
-            return idx, m
-    return None, None
-
-
-def ensure_models_list(cfg):
-    # Guarantee models is a list (defensive)
-    if not isinstance(cfg.get("models"), list):
-        cfg["models"] = []
-
-
-def is_valid_url(url):
-    try:
-        p = urlparse(url)
-        return p.scheme in ("http", "https") and p.netloc != ""
-    except Exception:
-        return False
-
-
-def confirm(prompt):
-    ans = input(f"{prompt} (y/N): ").strip().lower()
-    return ans in ("y", "yes")
+from lemonpie.cli_utils import confirm
+from lemonpie.model_utils import (
+    find_by_alias,
+    find_by_name,
+)
+from lemonpie.config import (
+    ensure_models_list,
+    is_valid_url,
+    load_config,
+    save_config,
+)
 
 
 def cmd_set_host(cfg, host):
@@ -272,7 +196,7 @@ def cmd_show(cfg):
     return 0
 
 
-def main(argv):
+def main():
     parser = argparse.ArgumentParser(prog="lmConfig", description="Manage LemonPie configuration (config.json)")
     parser.add_argument("--host", help="Set Ollama host URL (http(s)://host:port)")
     parser.add_argument("--default-model", help="Set default model using alias or full name (must exist in models)")
@@ -281,7 +205,7 @@ def main(argv):
     parser.add_argument("--list-models", action="store_true", help="List configured model aliases and names")
     parser.add_argument("--show", action="store_true", help="Print full config.json")
     parser.add_argument("--force", action="store_true", help="Force overwrite when adding a model")
-    args = parser.parse_args(argv)
+    args = parser.parse_args()
 
     cfg = load_config()
 
@@ -311,7 +235,7 @@ def main(argv):
 
 if __name__ == "__main__":
     try:
-        sys.exit(main(sys.argv[1:]) or 0)
+        sys.exit(main() or 0)
     except KeyboardInterrupt:
         print("\nInterrupted.")
         sys.exit(1)
