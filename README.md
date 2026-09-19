@@ -2,6 +2,7 @@
 
 **The ultra‑lightweight Ollama session manager for terminal workflows**
 
+![Python Version from PEP 621 TOML](https://img.shields.io/python/required-version-toml?tomlFilePath=https%3A%2F%2Fraw.githubusercontent.com%2FfamousStratum%2FLemonPie%2Frefs%2Fheads%2Fmain%2Fpyproject.toml)
 ![GitHub License](https://img.shields.io/github/license/famousstratum/lemonpie)
 
 LemonPie is a compact CLI for interacting with an Ollama server. It manages chat sessions and persists history locally, designed to be tiny and portable — ideal for lightweight systems and terminal users, but usable anywhere with Python and network access.
@@ -24,13 +25,19 @@ LemonPie is a compact CLI for interacting with an Ollama server. It manages chat
 
 ```text
 lemonpie/
-├── lm.py          # CLI session manager
-├── lmConfig.py    # Config manager
-├── config.json    # Example configuration
-├── sessions/      # Session files (created at runtime)
-├── README.md      # Project overview
-├── LICENSE        # GPLv3 license
-└── .gitignore     # Ignore venv, sessions, tmp files
+├── lemonpie/          # Core package namespace
+│   ├── lm.py          # CLI session manager
+│   ├── lm_config.py   # Config manager
+│   ├── config.py      # Configuration logic & I/O
+│   ├── model_utils.py # Model finding & resolution
+│   ├── cli_utils.py   # Terminal helpers & confirmation
+│   └── ...            # Other shared modules
+├── config.example.json# Configuration template
+├── sessions/          # Session files (created at runtime)
+├── pyproject.toml     # Package & build configuration
+├── README.md          # Project overview
+├── LICENSE            # GPLv3 license
+└── .gitignore         # Ignore venv, sessions, local config
 ```
 
 ---
@@ -106,10 +113,8 @@ Planned features and improvements:
 
 - Enhanced error handling and user feedback
   - Graceful handling of server errors (HTTP codes, non‑JSON responses)
-  - Null vs empty string distinction for defaults
-  - Clearer guidance messages when config is missing or invalid
 
-- Packaging for Debian Trixie (`.deb` via apt)
+- Packaging for Debian (`.deb` via apt)
 - Future schema validation for config/session files
 
 
@@ -117,7 +122,7 @@ Planned features and improvements:
 
 ## 📜 License
 
-This project is licensed under the **GNU General Public License v3.0** (**GPLv3**).You may redistribute and/or modify it under the terms of the GPL as published by the Free Software Foundation.See the [**license**]() file for details.
+This project is licensed under the **GNU General Public License v3.0** (**GPLv3**).You may redistribute and/or modify it under the terms of the GPL as published by the Free Software Foundation.See the [**license**](LICENSE) file for details.
 
 
 ---
