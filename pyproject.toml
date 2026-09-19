@@ -1,3 +1,7 @@
+[build-system]
+requires = ["setuptools>=77.0.0"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "lemonpie"
 version = "0.1.0"
@@ -6,7 +10,7 @@ authors = [
   { name = "famousStratum", email = "info@versicode.com" }
 ]
 readme = "README.md"
-license = { text = "GPL-3.0-or-later" }
+license = "GPL-3.0-or-later"
 requires-python = ">=3.8"
 
 dependencies = [
@@ -19,6 +23,10 @@ repository = "https://github.com/famousStratum/lemonpie"
 issues = "https://github.com/famousStratum/lemonpie/issues"
 
 [project.scripts]
-lm = "lm:main"
-lemonpie = "lm:main"
-lmConfig = "lmConfig:main"
+lm = "lemonpie.lm:main"
+lemonpie = "lemonpie.lm:main"
+lmConfig = "lemonpie.lm_config:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["lemonpie*"]
