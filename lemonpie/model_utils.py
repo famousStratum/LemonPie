@@ -1,0 +1,57 @@
+import sys
+
+from lemonpie.session_utils import save_session
+
+def handle_model_switch(cfg, session, requested_model):
+    """
+    Handles validating a requested model/alias and updates the active session 
+    if confirmed by the user.
+    """
+    if not session or not requested_model:
+        return session
+
+    alias_entry = find_by_alias(cfg, requested_model)
+    name_entry = find_by_name(cfg, requested_model)
+
+    if alias_entry:
+        new_model = alias_entry["name"]
+    elif name_entry:
+        new_model = name_entry["name"]
+    else:
+        print(f'Warning: "{requested_model}" is not a known alias or configured model.')
+        print('To add it, use lmConfig --add-model <alias> <model_name>')
+        sys.exit(0)
+
+    if new_model != session.get("model"):
+        confirm = input(f'Change session {session["id"]} model to "{new_model}"? (Y/n): ')
+        if confirm.lower() in ("y", "yes", ""):
+            session["model"] = new_model
+            save_session(session["id"], session)
+            print(f'Session model updated to {new_model}.')
+        else:
+            print("Aborted model change.")
+
+    return session
+
+def find_by_alias(cfg, alias):
+    for m in cfg.get("models", []):
+        if m.get("alias") == alias:
+            return m
+    return None
+
+def find_by_name(cfg, name):
+    for m in cfg.get("models", []):
+        if m.get("name") == name:
+            return m
+    return None
+
+def resolve_model(cfg, args_model, default_model_name):
+    if args_model:
+        alias_entry = find_by_alias(cfg, args_model)
+        if alias_entry:
+            return alias_entry["name"]
+        name_entry = find_by_name(cfg, args_model)
+        if name_entry:
+            return name_entry["name"]
+        return args_model
+    return default_model_name
