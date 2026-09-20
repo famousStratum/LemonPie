@@ -48,6 +48,7 @@ from lemonpie.session_utils import (
     load_session_by_id,
     delete_session_by_id,
     delete_all_sessions,
+    resolve_session,
     close_session,
     load_session,
     save_session,
