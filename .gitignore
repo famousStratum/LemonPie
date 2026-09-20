@@ -12,7 +12,7 @@ __pycache__/
 # Packaging output
 dist/
 build/
-lemonpie/_version.py
+src/lemonpie/_version.py
 *.egg-info/
 
 # Runtime artifacts
