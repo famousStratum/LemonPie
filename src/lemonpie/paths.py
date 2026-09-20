@@ -1,10 +1,10 @@
 import os
 
-# Inner package directory: ~/lemonpie/lemonpie
+# Inner package directory: ~/LemonPie/src/lemonpie
 PACKAGE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-# Project root directory: ~/lemonpie
-PROJECT_ROOT = os.path.abspath(os.path.join(PACKAGE_DIR, ".."))
+# Project root directory: ~/LemonPie (two levels up from src/lemonpie)
+PROJECT_ROOT = os.path.abspath(os.path.join(PACKAGE_DIR, "..", ".."))
 
 # Config file in project root
 CONFIG_FILE = os.path.join(PROJECT_ROOT, "config.json")

@@ -23,15 +23,15 @@ repository = "https://github.com/famousStratum/LemonPie"
 issues = "https://github.com/famousStratum/LemonPie/issues"
 
 [project.scripts]
-lm = "lemonpie.lm:main"
-lemonpie = "lemonpie.lm:main"
-lmConfig = "lemonpie.lm_config:main"
+lm = "lemonpie.main:main"
+lemonpie = "lemonpie.main:main"
+lmConfig = "lemonpie.cli.config_cmd:main"
 
 [tool.hatch.version]
 source = "vcs"
 
 [tool.hatch.build.hooks.vcs]
-version-file = "lemonpie/_version.py"
+version-file = "src/lemonpie/_version.py"
 
 [tool.hatch.build.targets.wheel]
-packages = ["lemonpie"]
+packages = ["src/lemonpie"]
