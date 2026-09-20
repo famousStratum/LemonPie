@@ -2,8 +2,14 @@ import argparse
 
 from lemonpie.session_utils import list_sessions, read_current
 
+try:
+    from lemonpie._version import __version__
+except ImportError:
+    __version__ = "0.0.0.dev0"
+
 def build_parser():
     parser = argparse.ArgumentParser(prog="lm", description="Run LemonPie with a given model or prompt")
+    parser.add_argument("-v", "--version", action="version", version=f"%(prog)s {__version__}")
     parser.add_argument("-m", "--model", help="Model alias or full name", default=None)
     parser.add_argument("-n", "--new", action="store_true", help="Start a new chat session")
     parser.add_argument("-s", "--session", help="Load an existing session by ID")
