@@ -11,10 +11,12 @@ authors = [
 ]
 readme = "README.md"
 license = "GPL-3.0-or-later"
-requires-python = ">=3.8"
+requires-python = ">=3.11"
 
 dependencies = [
-  "ollama"
+  "ollama",
+  "httpx",
+  "platformdirs"
 ]
 
 [project.urls]
