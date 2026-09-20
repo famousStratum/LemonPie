@@ -3,9 +3,9 @@ requires = ["hatchling", "hatch-vcs"]
 build-backend = "hatchling.build"
 
 [project]
-name = "lemonpie"
+name = "lemonpie-cli"
 dynamic = ["version"]
-description = "LemonPie — A lightweight Ollama session manager for terminal users"
+description = "LemonPie — A lightweight Ollama client for terminal users"
 authors = [
   { name = "famousStratum", email = "info@versicode.com" }
 ]
@@ -19,8 +19,8 @@ dependencies = [
 
 [project.urls]
 homepage = "https://versicode.com/lemonpie"
-repository = "https://github.com/famousStratum/lemonpie"
-issues = "https://github.com/famousStratum/lemonpie/issues"
+repository = "https://github.com/famousStratum/LemonPie"
+issues = "https://github.com/famousStratum/LemonPie/issues"
 
 [project.scripts]
 lm = "lemonpie.lm:main"
