@@ -175,7 +175,7 @@ wheels = [
 ]
 
 [[package]]
-name = "lemonpie"
+name = "lemonpie-cli"
 source = { editable = "." }
 dependencies = [
     { name = "ollama" },
