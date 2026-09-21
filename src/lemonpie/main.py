@@ -18,7 +18,6 @@ See README.md for details and maintainer notes.
 """
 
 import sys
-from ollama import Client
 
 from lemonpie.config import (
     load_config,
@@ -26,19 +25,28 @@ from lemonpie.config import (
     build_timeout,
 )
 
-from lemonpie.cli_utils import (
-    build_parser,
+from lemonpie.cli.parser import build_parser
+from lemonpie.cli.ui import (
     print_session,
     print_sessions_list,
+    StatusSpinner,
+    CONNECTING_MSGS,
+    WAITING_MSGS,
 )
 
-from lemonpie.model_utils import (
+from lemonpie.engine.models import (
     find_by_name,
     handle_model_switch,
     resolve_model,
 )
 
-from lemonpie.session_utils import (
+from lemonpie.engine.ollama import (
+    build_client,
+    stream_chat,
+    resolve_ollama_error,
+)
+
+from lemonpie.sessions.storage import (
     create_session,
     delete_session_by_id,
     delete_all_sessions,
@@ -50,19 +58,13 @@ from lemonpie.session_utils import (
     update_title,
 )
 
-from lemonpie.spinner import (
-    StatusSpinner,
-    CONNECTING_MSGS,
-    WAITING_MSGS,
-)
-
 from lemonpie.time_utils import now_ts
 
 def main():
     cfg = load_config()
     server_host = resolve_server_host(cfg)
     timeout = build_timeout()
-    client = Client(host=server_host, timeout=timeout)
+    client = build_client(server_host, timeout)
     default_model_name = cfg.get("default") or None
     parser = build_parser()
     args = parser.parse_args()
@@ -150,50 +152,28 @@ def main():
         assistant_reply = ""
         reply_ts = None
         first_chunk_seen = False
+        chunks = stream_chat(client, model, session["history"])
 
         try:
-            stream = client.chat(model=model, messages=session["history"], stream=True)
-            spinner.stop()
-
-            spinner = StatusSpinner(WAITING_MSGS)
-            spinner.start()
-
-            for chunk in stream:
+            for content in chunks:
                 if not first_chunk_seen:
                     spinner.stop()
                     first_chunk_seen = True
-
-                # Standard Ollama client attribute access
-                content = getattr(getattr(chunk, "message", None), "content", None)
-                if content is None and isinstance(chunk, dict):
-                    content = chunk.get("message", {}).get("content", "")
-
-                if content:
-                    print(content, end="", flush=True)
-                    assistant_reply += content
+                print(content, end="", flush=True)
+                assistant_reply += content
             print()
             reply_ts = now_ts()
 
         except KeyboardInterrupt:
-            try:
-                if 'stream' in locals() and hasattr(stream, "close"):
-                    stream.close()
-            except Exception:
-                pass
+            chunks.close()
             print("\nInterrupted by user.")
             sys.exit(1)
 
         except Exception as e:
-            msg = str(e)
-            if "[Errno 111]" in msg or "Connection refused" in msg:
-                print("\nOllama server did not respond: Connection refused.")
-                print("Hint: Ollama may not be running, or it may not be listening on:", server_host)
-                print("Check that the server is started with `ollama serve` and bound to the correct interface.")
-            elif "[Errno 110]" in msg or "timed out" in msg.lower():
-                print("\nFailed to contact Ollama server: Connection timed out.")
-                print("Hint: The server at", server_host, "is unreachable. Verify IP/port and network.")
-            else:
-                print("\nFailed to contact Ollama server:", msg)
+            title, hint = resolve_ollama_error(e, server_host)
+            print("\n" + title)
+            if hint:
+                print(hint)
             sys.exit(1)
 
         finally:
