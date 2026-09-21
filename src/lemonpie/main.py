@@ -17,11 +17,8 @@ Quick usage
 See README.md for details and maintainer notes.
 """
 
-import argparse, errno, httpx, json, os, sys
-from datetime import datetime, timezone
+import sys
 from ollama import Client
-
-from lemonpie.paths import CURRENT_FILE, SESSIONS_DIR
 
 from lemonpie.config import (
     load_config,
@@ -31,13 +28,11 @@ from lemonpie.config import (
 
 from lemonpie.cli_utils import (
     build_parser,
-    list_sessions,
     print_session,
     print_sessions_list,
 )
 
 from lemonpie.model_utils import (
-    find_by_alias,
     find_by_name,
     handle_model_switch,
     resolve_model,
@@ -45,19 +40,13 @@ from lemonpie.model_utils import (
 
 from lemonpie.session_utils import (
     create_session,
-    load_session_by_id,
     delete_session_by_id,
     delete_all_sessions,
     resolve_session,
     close_session,
     load_session,
     save_session,
-    delete_session,
     read_current,
-    write_current,
-    clear_current,
-    default_title,
-    set_title,
     update_title,
 )
 
@@ -69,15 +58,12 @@ from lemonpie.spinner import (
 
 from lemonpie.time_utils import now_ts
 
-cfg = load_config()
-server_host = resolve_server_host(cfg)
-timeout = build_timeout()
-client = Client(host=server_host, timeout=timeout)
-
-models_list = cfg["models"]
-default_model_name = cfg.get("default") or None
-
 def main():
+    cfg = load_config()
+    server_host = resolve_server_host(cfg)
+    timeout = build_timeout()
+    client = Client(host=server_host, timeout=timeout)
+    default_model_name = cfg.get("default") or None
     parser = build_parser()
     args = parser.parse_args()
 
@@ -85,18 +71,9 @@ def main():
         parser.print_help()
         sys.exit(1)
 
-    model_flag = any(a in ("-m", "--model") for a in sys.argv[1:])
-    resolve_model(cfg, args.model, default_model_name)
-
-    model = default_model_name
-    if model is None:
-        print("No default model configured.")
-        print("Use lmConfig to add one or pass a known alias with -m.")
-        sys.exit(1)
-
     current_id = read_current()
 
-    # Direct CLI actions
+        # Direct CLI actions
 
     if args.list:
         print_sessions_list(); sys.exit(0)
@@ -122,9 +99,17 @@ def main():
         confirm = input("Are you sure you want to delete ALL sessions? (y/N): ")
         if confirm.lower() in ("y", "yes"):
             count = delete_all_sessions()
-            print(f"Deleted {count} session(s).")
+            print(f"Deleted {count} session(s)."); sys.exit(0)
         else:
             print("Aborted."); sys.exit(0)
+
+    model_flag = args.model is not None
+    model = resolve_model(cfg, args.model, default_model_name)
+
+    if model is None:
+        print("No default model configured.")
+        print("Use lmConfig to add one or pass a known alias with -m.")
+        sys.exit(1)
 
     if model_flag and not current_id and not args.new and not args.session and not args.prompt:
         print(f'No current session.\n'
@@ -141,6 +126,8 @@ def main():
 
     if args.title:
         session = update_title(session, model, args.title, args.prompt)
+        if not args.prompt:
+            sys.exit(0)
 
     if args.prompt:
         user_prompt = " ".join(args.prompt)
