@@ -1,16 +1,44 @@
-import sys, time, random, threading
+import random
+import sys
+import threading
+import time
+
+from lemonpie.sessions.storage import list_sessions
 
 CONNECTING_MSGS = [
     "Connecting",
     "Squeezing the lemons",
-    "Knocking on Ollama’s door"
+    "Knocking on Ollama’s door",
 ]
 
 WAITING_MSGS = [
     "Waiting for model response",
     "The pie is cooking",
-    "Brewing tokens"
+    "Brewing tokens",
 ]
+
+
+def confirm(prompt):
+    ans = input(f"{prompt} (y/N): ").strip().lower()
+    return ans in ("y", "yes")
+
+
+def print_session(session):
+    print(f"Session {session['id']} — {session.get('title') or '<no title>'}")
+    for turn in session["history"]:
+        role = turn["role"]
+        content = turn["content"]
+        print(f"{role} [{turn.get('ts', '')}] : {content}")
+
+
+def print_sessions_list():
+    sessions = list_sessions()
+    if not sessions:
+        print("No sessions found.")
+        return
+    for sid, title, created, updated, is_current in sessions:
+        print(f"{is_current} {sid}  {title} created: {created}, updated: {updated}")
+
 
 class StatusSpinner:
     def __init__(self, messages, interval=0.5):

@@ -15,8 +15,8 @@ import argparse, json, os, sys
 from urllib.parse import urlparse
 
 from lemonpie.paths import CONFIG_FILE
-from lemonpie.cli_utils import confirm
-from lemonpie.model_utils import (
+from lemonpie.cli.ui import confirm
+from lemonpie.engine.models import (
     find_by_alias,
     find_by_name,
 )
