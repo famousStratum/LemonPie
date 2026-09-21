@@ -41,7 +41,7 @@ def resolve_session(args, model, current_id):
 def load_session(session_id):
     try:
         with open(session_path(session_id), "r", encoding="utf-8") as f:
-            return json.load(f)
+            s = json.load(f)
         # Backfill created_at/updated_at from history if missing
         if "created_at" not in s or not s.get("created_at"):
             if s.get("history"):
@@ -179,6 +179,5 @@ def list_sessions():
                 sessions.append((data["id"], data.get("title") or "<no title>", created, updated, is_current))
         except Exception:
             # skip invalid JSON files
-            print("DEBUG: loaded", fname, "->", data.get("id"))
             continue
     return sessions
