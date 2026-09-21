@@ -1,30 +1,50 @@
-name: Release Package to PyPI
+name: Release & Publish
 
 on:
   push:
-    tags:
-      - "v*"
+    branches:
+      - main
+
+permissions:
+  contents: write
+  pull-requests: write
 
 jobs:
+  release-please:
+    name: Manage Release PR & Tags
+    runs-on: ubuntu-latest
+    outputs:
+      release_created: ${{ steps.release.outputs.releases_created }}
+      tag_name: ${{ steps.release.outputs.tag_name }}
+    steps:
+      - uses: googleapis/release-please-action@v4
+        id: release
+        with:
+          config-file: .release-please/config.json
+          manifest-file: .release-please/manifest.json
+
   pypi-publish:
     name: Build and publish to PyPI
+    needs: release-please
+    if: ${{ needs.release-please.outputs.release_created == 'true' }}
     runs-on: ubuntu-latest
     environment: pypi
     permissions:
       id-token: write # Required for Trusted Publisher OIDC authentication
 
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          fetch-depth: 0
+          fetch-depth: 0 # Required for hatch-vcs to inspect git history & tags
 
       - name: Verify tag is reachable from main
         run: |
           git fetch origin main
           if git merge-base --is-ancestor "${{ github.sha }}" origin/main; then
-            echo "Tag ${{ github.ref_name }} (commit ${{ github.sha }}) is on main. Proceeding."
+            echo "Commit ${{ github.sha }} is on main. Proceeding."
           else
-            echo "::error::Tag ${{ github.ref_name }} (commit ${{ github.sha }}) is not reachable from origin/main. Refusing to publish — merge to main before tagging."
+            echo "::error::Commit ${{ github.sha }} is not reachable from origin/main. Refusing to publish."
             exit 1
           fi
 

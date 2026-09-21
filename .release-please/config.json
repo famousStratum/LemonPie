@@ -1,0 +1,13 @@
+{
+  "release-type": "python",
+  "packages": {
+    ".": {
+      "package-name": "lemonpie-cli",
+      "changelog-path": "CHANGELOG.md",
+      "bump-minor-pre-major": true,
+      "bump-patch-for-minor-pre-major": true,
+      "prerelease": true,
+      "versioning": "prerelease"
+    }
+  }
+}
