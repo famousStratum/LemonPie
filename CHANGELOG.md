@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.0-alpha.3](https://github.com/famousStratum/LemonPie/compare/v0.2.0-alpha.2...v0.2.0-alpha.3) (2026-09-21)
+
+
+### Bug Fixes
+
+* resolve tuple/dict mismatch in model alias lookup and dead code in session loading ([#23](https://github.com/famousStratum/LemonPie/issues/23)) ([65152bf](https://github.com/famousStratum/LemonPie/commit/65152bf9d6df0d91addad5aa72f73145383b99d9))
+
 ## [0.2.0-alpha.2](https://github.com/famousStratum/LemonPie/compare/lemonpie-cli-v0.2.0-alpha.1...lemonpie-cli-v0.2.0-alpha.2) (2026-09-21)
 
 
