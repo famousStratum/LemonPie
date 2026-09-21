@@ -19,10 +19,10 @@ def find_by_name(cfg, name):
 
 def resolve_model(cfg, args_model, default_model_name):
     if args_model:
-        alias_entry = find_by_alias(cfg, args_model)
+        _, alias_entry = find_by_alias(cfg, args_model)
         if alias_entry:
             return alias_entry["name"]
-        name_entry = find_by_name(cfg, args_model)
+        _, name_entry = find_by_name(cfg, args_model)
         if name_entry:
             return name_entry["name"]
         return args_model
@@ -37,8 +37,8 @@ def handle_model_switch(cfg, session, requested_model):
     if not session or not requested_model:
         return session
 
-    alias_entry = find_by_alias(cfg, requested_model)
-    name_entry = find_by_name(cfg, requested_model)
+    _, alias_entry = find_by_alias(cfg, requested_model)
+    _, name_entry = find_by_name(cfg, requested_model)
 
     if alias_entry:
         new_model = alias_entry["name"]
