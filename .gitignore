@@ -15,10 +15,7 @@ build/
 src/lemonpie/_version.py
 *.egg-info/
 
-# Runtime artifacts
-config.json
-sessions/*
-!sessions/.gitkeep
+# Runtime logs/temp
 *.log
 *.tmp
 

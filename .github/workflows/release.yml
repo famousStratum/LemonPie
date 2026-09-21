@@ -18,6 +18,16 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Verify tag is reachable from main
+        run: |
+          git fetch origin main
+          if git merge-base --is-ancestor "${{ github.sha }}" origin/main; then
+            echo "Tag ${{ github.ref_name }} (commit ${{ github.sha }}) is on main. Proceeding."
+          else
+            echo "::error::Tag ${{ github.ref_name }} (commit ${{ github.sha }}) is not reachable from origin/main. Refusing to publish — merge to main before tagging."
+            exit 1
+          fi
+
       - name: Install uv
         uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
         with:
