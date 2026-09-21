@@ -11,8 +11,8 @@ LemonPie is a compact CLI for interacting with an Ollama server. It manages chat
 
 ## ✨ Features
 - Start and manage chat sessions with Ollama models
-- Persist session history locally under `sessions/`
-- Configure host, default model, and aliases via `config.json`
+- Persist session history in your OS's standard user data directory
+- Configure host, default model, and aliases via a config file in your OS's standard user config directory
 - Add, remove, and list models with aliases (`lmConfig`)
 - Switch models mid‑session with confirmation
 - Atomic writes for safety (tmp + replace)
@@ -24,25 +24,41 @@ LemonPie is a compact CLI for interacting with an Ollama server. It manages chat
 ## 📂 Project Structure
 
 ```text
-lemonpie/
-├── lemonpie/          # Core package namespace
-│   ├── lm.py          # CLI session manager
-│   ├── lm_config.py   # Config manager
-│   ├── config.py      # Configuration logic & I/O
-│   ├── model_utils.py # Model finding & resolution
-│   ├── cli_utils.py   # Terminal helpers & confirmation
-│   └── ...            # Other shared modules
-├── config.example.json# Configuration template
-├── sessions/          # Session files (created at runtime)
-├── pyproject.toml     # Package & build configuration
-├── README.md          # Project overview
-├── LICENSE            # GPLv3 license
-└── .gitignore         # Ignore venv, sessions, local config
+LemonPie/
+├── src/
+│   └── lemonpie/            # Core package namespace
+│       ├── main.py          # CLI session manager (entrypoints: lm, lemonpie)
+│       ├── config.py        # Configuration logic & I/O
+│       ├── paths.py         # OS-appropriate config/data directory resolution
+│       ├── model_utils.py   # Model finding & resolution
+│       ├── cli_utils.py     # Terminal helpers & confirmation
+│       ├── session_utils.py # Session persistence
+│       ├── spinner.py       # Status spinner
+│       ├── time_utils.py    # Timestamp helpers
+│       └── cli/
+│           └── config_cmd.py # Config manager (entrypoint: lmConfig)
+├── config.example.json      # Configuration template
+├── pyproject.toml           # Package & build configuration
+├── README.md                # Project overview
+├── LICENSE                  # GPLv3 license
+└── .gitignore
 ```
 
 ---
 
-## ⚙️ Configuration (`config.json`)
+## ⚙️ Configuration
+
+LemonPie keeps its config file and session history in your OS's standard user directories (via [`platformdirs`](https://pypi.org/project/platformdirs/)) — not in the project folder:
+
+|            | Linux                          | macOS                                       | Windows                     |
+|------------|---------------------------------|----------------------------------------------|------------------------------|
+| Config     | `~/.config/lemonpie/`           | `~/Library/Application Support/lemonpie/`     | `%LOCALAPPDATA%\lemonpie\`   |
+| Sessions   | `~/.local/share/lemonpie/sessions/` | `~/Library/Application Support/lemonpie/sessions/` | `%LOCALAPPDATA%\lemonpie\sessions\` |
+
+Both are overridable via environment variables — `LEMONPIE_CONFIG_DIR` and `LEMONPIE_SESSIONS_DIR` — useful for testing or running in a container.
+
+`config.example.json` at the repo root is a template. `lmConfig` will create your real config file on first use if one doesn't exist yet.
+
 ### Example structure:
 ```json
 {
@@ -63,7 +79,7 @@ models: list of objects with alias (nullable) and name
 
 ## 🚀 Usage
 
-### lm.py
+### `lm` / `lemonpie`
 - Start a new session \
 `lm -n "Hello"`
 
@@ -82,7 +98,7 @@ models: list of objects with alias (nullable) and name
 - Switch model in current session\
 `lm -m qwen2.5-coder:3b`
 
-### lmConfig.py
+### `lmConfig`
 - Manage models with lmConfig\
 `lmConfig --add-model qwen qwen2.5-coder:3b`\
 `lmConfig --list-models`\
@@ -126,4 +142,3 @@ This project is licensed under the **GNU General Public License v3.0** (**GPLv3*
 
 
 ---
-
