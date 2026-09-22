@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.0-beta.1](https://github.com/famousStratum/LemonPie/compare/v0.2.0-alpha.3...v0.2.0-beta.1) (2026-09-22)
+
+
+### Bug Fixes
+
+* eliminate now_ts() double-calls and session ID collisions in session creation ([#27](https://github.com/famousStratum/LemonPie/issues/27)) ([7864136](https://github.com/famousStratum/LemonPie/commit/7864136b6dc200e1e682b61252eadc74e99ac66a))
+
 ## [0.2.0-alpha.3](https://github.com/famousStratum/LemonPie/compare/v0.2.0-alpha.2...v0.2.0-alpha.3) (2026-09-21)
 
 
