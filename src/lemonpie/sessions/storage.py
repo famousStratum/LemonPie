@@ -1,4 +1,4 @@
-import glob, json, os, sys
+import glob, json, os, sys, uuid
 from datetime import datetime, timezone
 
 from lemonpie.paths import CURRENT_FILE, SESSIONS_DIR
@@ -99,10 +99,12 @@ def set_title(session, new_title):
     save_session(session["id"], session)
     return True
 
-def create_session(prompt, model):
-    session_id = datetime.now().strftime("%Y%m%d-%H%M%S")
-    title = default_title(" ".join(prompt)) if prompt else "<no title>"
-    session = {"id": session_id, "model": model, "title": title, "history": [], "created_at": now_ts(), "updated_at": now_ts()}
+def create_session(prompt, model, title=None):
+    session_id = datetime.now().strftime("%Y%m%d-%H%M%S") + "-" + uuid.uuid4().hex[:6]
+    if title is None:
+        title = default_title(" ".join(prompt)) if prompt else "<no title>"
+    ts = now_ts()
+    session = {"id": session_id, "model": model, "title": title, "history": [], "created_at": ts, "updated_at": ts}
     save_session(session_id, session)
     write_current(session_id)
     return session
@@ -138,18 +140,8 @@ def update_title(session, model, new_title, prompt=None):
     if not session:
         confirm = input(f'No current session. Create a new session with title "{new_title}"? (Y/n): ')
         if confirm.lower() in ("y", "yes", ""):
-            session_id = datetime.now().strftime("%Y%m%d-%H%M%S")
-            session = {
-                "id": session_id,
-                "model": model,
-                "title": new_title,
-                "history": [],
-                "created_at": now_ts(),
-                "updated_at": now_ts()
-            }
-            save_session(session_id, session)
-            write_current(session_id)
-            print(f'Created new session {session_id} with title "{new_title}".')
+            session = create_session(prompt or [], model, title=new_title)
+            print(f'Created new session {session["id"]} with title "{new_title}".')
         else:
             print("Aborted creating new session.")
             sys.exit(0)
