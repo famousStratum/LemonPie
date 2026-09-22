@@ -47,7 +47,6 @@ from lemonpie.engine.ollama import (
 )
 
 from lemonpie.sessions.storage import (
-    create_session,
     delete_session_by_id,
     delete_all_sessions,
     resolve_session,
@@ -134,13 +133,9 @@ def main():
     if args.prompt:
         user_prompt = " ".join(args.prompt)
         turn_ts = now_ts()
-        if session:
-            session["history"].append({"role": "user", "content": user_prompt, "ts": turn_ts})
-            session["updated_at"] = turn_ts
-            save_session(session_id, session)
-        else:
-            session = create_session(user_prompt, model)
-            session_id = session["id"]
+        session["history"].append({"role": "user", "content": user_prompt, "ts": turn_ts})
+        session["updated_at"] = turn_ts
+        save_session(session_id, session)
 
         if not find_by_name(cfg, model):
             print(f'Configured models do not include "{model}". Use lmConfig to add it or pass a known alias.')

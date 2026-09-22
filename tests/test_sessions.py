@@ -14,10 +14,6 @@ from lemonpie.sessions import storage
 # create_session / default_title
 # ---------------------------------------------------------------------------
 
-@pytest.mark.xfail(
-    reason="create_session() calls now_ts() twice, so created_at and updated_at differ by microseconds instead of matching. Bug, not a test issue — fix by computing the timestamp once and reusing it for both fields.",
-    strict=True,
-)
 def test_create_session_writes_file_and_sets_current(isolated_dirs):
     session = storage.create_session(["hello", "world"], "qwen2.5-coder:3b")
 
@@ -122,10 +118,11 @@ def test_delete_session_removes_file_and_reports_result(isolated_dirs):
     assert storage.delete_session(session["id"]) is False  # already gone
 
 
-@pytest.mark.xfail(
-    reason="create_session() derives session IDs from datetime.now().strftime('%Y%m%d-%H%M%S'), 1-second resolution. Two sessions created within the same second collide and the second silently overwrites the first's file. Bug, not a test issue — fix by adding sub-second precision (or a uuid suffix) to the session ID.",
-    strict=True,
-)
+def test_create_session_ids_are_unique_even_within_the_same_second(isolated_dirs):
+    ids = {storage.create_session([], "qwen")["id"] for _ in range(20)}
+    assert len(ids) == 20
+
+
 def test_delete_all_sessions_clears_dir_and_current(isolated_dirs):
     storage.create_session(["one"], "qwen")
     storage.create_session(["two"], "qwen")
@@ -285,6 +282,9 @@ def test_update_title_with_no_session_confirmed_creates_one(isolated_dirs, monke
         storage.update_title(None, "qwen", "Brand new", prompt=None)
     sessions = storage.list_sessions()
     assert any(row[1] == "Brand new" for row in sessions)
+
+    created = storage.load_session(storage.read_current())
+    assert created["created_at"] == created["updated_at"]
 
 
 def test_update_title_with_no_session_aborted_exits_zero(isolated_dirs, monkeypatch):
