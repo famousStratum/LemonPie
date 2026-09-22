@@ -196,7 +196,7 @@ def cmd_show(cfg):
     return 0
 
 
-def main():
+def build_parser():
     parser = argparse.ArgumentParser(prog="lmConfig", description="Manage LemonPie configuration (config.json)")
     parser.add_argument("--host", help="Set Ollama host URL (http(s)://host:port)")
     parser.add_argument("--default-model", help="Set default model using alias or full name (must exist in models)")
@@ -205,6 +205,11 @@ def main():
     parser.add_argument("--list-models", action="store_true", help="List configured model aliases and names")
     parser.add_argument("--show", action="store_true", help="Print full config.json")
     parser.add_argument("--force", action="store_true", help="Force overwrite when adding a model")
+    return parser
+
+
+def main():
+    parser = build_parser()
     args = parser.parse_args()
 
     cfg = load_config()

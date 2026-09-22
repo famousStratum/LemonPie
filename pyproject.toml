@@ -37,3 +37,10 @@ version-file = "src/lemonpie/_version.py"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/lemonpie"]
+
+[dependency-groups]
+dev = ["pytest>=8.0"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra"

@@ -28,5 +28,5 @@ jobs:
       - name: Verify build artifact
         run: uv build
 
-      # - name: Run tests (Uncomment in Phase 3)
-      #   run: uv run pytest
+      - name: Run tests
+        run: uv run pytest
