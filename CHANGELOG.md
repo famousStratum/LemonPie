@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.0-rc1](https://github.com/famousStratum/LemonPie/compare/v0.2.0-beta.1...v0.2.0-rc1) (2026-09-22)
+
+
+### Miscellaneous Chores
+
+* ignore .test-env/ ([#32](https://github.com/famousStratum/LemonPie/issues/32)) ([3045077](https://github.com/famousStratum/LemonPie/commit/30450770de3441e5e4e078c5151abd9763d5098f))
+
 ## [0.2.0-beta.1](https://github.com/famousStratum/LemonPie/compare/v0.2.0-alpha.3...v0.2.0-beta.1) (2026-09-22)
 
 
