@@ -1,8 +1,9 @@
 # LemonPie
 
-**The ultra‑lightweight Ollama session manager for terminal workflows**
+**LemonPie — A lightweight Ollama client for terminal users**
 
 ![Python Version from PEP 621 TOML](https://img.shields.io/python/required-version-toml?tomlFilePath=https%3A%2F%2Fraw.githubusercontent.com%2FfamousStratum%2FLemonPie%2Frefs%2Fheads%2Fmain%2Fpyproject.toml)
+![PyPI Version](https://img.shields.io/pypi/v/lemonpie-cli)
 ![GitHub License](https://img.shields.io/github/license/famousstratum/lemonpie)
 
 LemonPie is a compact CLI for interacting with an Ollama server. It manages chat sessions and persists history locally, designed to be tiny and portable — ideal for lightweight systems and terminal users, but usable anywhere with Python and network access.
@@ -30,14 +31,21 @@ LemonPie/
 │       ├── main.py          # CLI session manager (entrypoints: lm, lemonpie)
 │       ├── config.py        # Configuration logic & I/O
 │       ├── paths.py         # OS-appropriate config/data directory resolution
-│       ├── model_utils.py   # Model finding & resolution
-│       ├── cli_utils.py     # Terminal helpers & confirmation
-│       ├── session_utils.py # Session persistence
-│       ├── spinner.py       # Status spinner
 │       ├── time_utils.py    # Timestamp helpers
-│       └── cli/
-│           └── config_cmd.py # Config manager (entrypoint: lmConfig)
-├── config.example.json      # Configuration template
+│       ├── cli/
+│       │   ├── parser.py    # Argument parsing (lm)
+│       │   ├── ui.py        # Terminal helpers & confirmation
+│       │   └── config_cmd.py # Config manager (entrypoint: lmConfig)
+│       ├── engine/
+│       │   ├── models.py    # Model finding & resolution
+│       │   └── ollama.py    # Ollama client interaction
+│       └── sessions/
+│           └── storage.py   # Session persistence
+├── tests/                   # pytest suite
+├── docs/
+│   ├── config.example.json  # Configuration template
+│   └── design/               # Design docs (state-machine.md, etc.)
+├── .github/workflows/       # CI & release pipelines
 ├── pyproject.toml           # Package & build configuration
 ├── README.md                # Project overview
 ├── LICENSE                  # GPLv3 license
@@ -57,7 +65,7 @@ LemonPie keeps its config file and session history in your OS's standard user di
 
 Both are overridable via environment variables — `LEMONPIE_CONFIG_DIR` and `LEMONPIE_SESSIONS_DIR` — useful for testing or running in a container.
 
-`config.example.json` at the repo root is a template. `lmConfig` will create your real config file on first use if one doesn't exist yet.
+`docs/config.example.json` is a template. `lmConfig` will create your real config file on first use if one doesn't exist yet.
 
 ### Example structure:
 ```json
