@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.0-rc2](https://github.com/famousStratum/LemonPie/compare/v0.2.0-rc1...v0.2.0-rc2) (2026-09-23)
+
+
+### Documentation
+
+* split roadmap into design docs and add command reference ([#34](https://github.com/famousStratum/LemonPie/issues/34)) ([a382aac](https://github.com/famousStratum/LemonPie/commit/a382aac6d480963fce7f4486926e315a51741aaf))
+
 ## [0.2.0-rc1](https://github.com/famousStratum/LemonPie/compare/v0.2.0-beta.1...v0.2.0-rc1) (2026-09-22)
 
 
