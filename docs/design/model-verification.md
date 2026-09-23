@@ -1,4 +1,6 @@
-# Model Verification State Machine
+# Model Verification
+
+**Status:** Ready
 
 This document outlines the planned state machine for `lmConfig --add-model`.  
 It defines how LemonPie should handle server reachability, model installation, and user choices when adding models.

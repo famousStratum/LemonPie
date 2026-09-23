@@ -1,14 +1,14 @@
 # LemonPie
 
-**LemonPie — A lightweight Ollama client for terminal users**
-
-![Python Version from PEP 621 TOML](https://img.shields.io/python/required-version-toml?tomlFilePath=https%3A%2F%2Fraw.githubusercontent.com%2FfamousStratum%2FLemonPie%2Frefs%2Fheads%2Fmain%2Fpyproject.toml)
 ![PyPI Version](https://img.shields.io/pypi/v/lemonpie-cli)
 ![GitHub License](https://img.shields.io/github/license/famousstratum/lemonpie)
+![Python Version from PEP 621 TOML](https://img.shields.io/python/required-version-toml?tomlFilePath=https%3A%2F%2Fraw.githubusercontent.com%2FfamousStratum%2FLemonPie%2Frefs%2Fheads%2Fmain%2Fpyproject.toml)
+
+**LemonPie — A lightweight Ollama client for terminal users**
 
 LemonPie is a compact CLI for interacting with an Ollama server. It manages chat sessions and persists history locally, designed to be tiny and portable — ideal for lightweight systems and terminal users, but usable anywhere with Python and network access.
 
----
+
 
 ## ✨ Features
 - Start and manage chat sessions with Ollama models
@@ -20,7 +20,7 @@ LemonPie is a compact CLI for interacting with an Ollama server. It manages chat
 - Streaming responses from Ollama for real‑time output
 - Graceful handling of Ctrl‑C interrupts
 
----
+
 
 ## 📂 Project Structure
 
@@ -44,15 +44,13 @@ LemonPie/
 ├── tests/                   # pytest suite
 ├── docs/
 │   ├── config.example.json  # Configuration template
-│   └── design/               # Design docs (state-machine.md, etc.)
+│   └── design/               # Design docs (model-verification.md, etc.)
 ├── .github/workflows/       # CI & release pipelines
 ├── pyproject.toml           # Package & build configuration
 ├── README.md                # Project overview
 ├── LICENSE                  # GPLv3 license
 └── .gitignore
 ```
-
----
 
 ## ⚙️ Configuration
 
@@ -82,11 +80,7 @@ server: Ollama host URL\
 default: canonical model name (full identifier)\
 models: list of objects with alias (nullable) and name
 
-
----
-
 ## 🚀 Usage
-
 ### `lm` / `lemonpie`
 - Start a new session \
 `lm -n "Hello"`
@@ -112,41 +106,21 @@ models: list of objects with alias (nullable) and name
 `lmConfig --list-models`\
 `lmConfig --remove-model qwen`
 
+👉 Full [command reference](docs/usage/command-index.md).
 
 ## 🗺 Roadmap
 
 Planned features and improvements:
 
-- `lmConfig --init`  
-  Interactive setup command that:
-  - Prompts for Ollama server IP:port
-  - Verifies server reachability
-  - Lists available models if server responds
-  - Allows user to select models to add
-  - Handles cases where no models are found (with guidance to Ollama docs)
-  - Supports `--force` to override verification or alias conflicts
-
-- Model verification state machine  
-  Planned logic for `lmConfig --add-model`:
-  - Check server reachability
-  - Verify if model is installed
-  - Offer to pull missing models
-  - Handle pull success/failure and user choice
-  - Respect `--force` for overriding conflicts or skipping checks  
-  *(See docs/design/state-machine.md for full diagram once published)*
-
+- Code completion (autocomplete)
+- lmConfig --init
+- Model verification state machine
 - Enhanced error handling and user feedback
-  - Graceful handling of server errors (HTTP codes, non‑JSON responses)
-
-- Packaging for Debian (`.deb` via apt)
+- Cross‑platform packaging (apt, winget, Homebrew)
 - Future schema validation for config/session files
 
-
----
+👉 See the full [roadmap](docs/ROADMAP.md) for details.
 
 ## 📜 License
 
 This project is licensed under the **GNU General Public License v3.0** (**GPLv3**).You may redistribute and/or modify it under the terms of the GPL as published by the Free Software Foundation.See the [**license**](LICENSE) file for details.
-
-
----
