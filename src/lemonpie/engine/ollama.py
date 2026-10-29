@@ -38,8 +38,8 @@ def resolve_ollama_error(exc, server_host):
     if "[Errno 111]" in msg or "Connection refused" in msg:
         return (
             "Ollama server did not respond: Connection refused.",
-            f"Hint: Ollama may not be running, or it may not be listening on: {server_host}\n"
-            "Check that the server is started with `ollama serve` and bound to the correct interface.",
+            (f"Hint: Ollama may not be running, or it may not be listening on: {server_host}\n"
+            "Check that the server is started with `ollama serve` and bound to the correct interface."),
         )
     if "[Errno 110]" in msg or "timed out" in msg.lower():
         return (

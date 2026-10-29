@@ -19,45 +19,40 @@ See README.md for details and maintainer notes.
 
 import sys
 
-from lemonpie.config import (
-    load_config,
-    resolve_server_host,
-    build_timeout,
-)
-
 from lemonpie.cli.parser import build_parser
 from lemonpie.cli.ui import (
+    CONNECTING_MSGS,
+    StatusSpinner,
     print_session,
     print_sessions_list,
-    StatusSpinner,
-    CONNECTING_MSGS,
-    WAITING_MSGS,
 )
-
+from lemonpie.config import (
+    build_timeout,
+    load_config,
+    resolve_server_host,
+)
 from lemonpie.engine.models import (
     find_by_name,
     handle_model_switch,
     resolve_model,
 )
-
 from lemonpie.engine.ollama import (
     build_client,
-    stream_chat,
     resolve_ollama_error,
+    stream_chat,
 )
-
 from lemonpie.sessions.storage import (
-    delete_session_by_id,
-    delete_all_sessions,
-    resolve_session,
     close_session,
+    delete_all_sessions,
+    delete_session_by_id,
     load_session,
-    save_session,
     read_current,
+    resolve_session,
+    save_session,
     update_title,
 )
-
 from lemonpie.time_utils import now_ts
+
 
 def main():
     cfg = load_config()
