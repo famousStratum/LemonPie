@@ -1,6 +1,11 @@
-import os, httpx, json
+import json
+import os
+from urllib.parse import urlparse
+
+import httpx
 
 from lemonpie.paths import CONFIG_FILE
+
 
 def save_config(cfg):
     tmp = CONFIG_FILE + ".tmp"

@@ -56,10 +56,12 @@ LemonPie/
 
 LemonPie keeps its config file and session history in your OS's standard user directories (via [`platformdirs`](https://pypi.org/project/platformdirs/)) — not in the project folder:
 
-|            | Linux                          | macOS                                       | Windows                     |
-|------------|---------------------------------|----------------------------------------------|------------------------------|
-| Config     | `~/.config/lemonpie/`           | `~/Library/Application Support/lemonpie/`     | `%LOCALAPPDATA%\lemonpie\`   |
-| Sessions   | `~/.local/share/lemonpie/sessions/` | `~/Library/Application Support/lemonpie/sessions/` | `%LOCALAPPDATA%\lemonpie\sessions\` |
+| OS | Config Path                                | Sessions Path                                             |
+|----------|--------------------------------------------|-----------------------------------------------------------|
+| Linux    | `~/.config/lemonpie/`                      | `~/.local/share/lemonpie/sessions/`                       |
+| macOS    | `~/Library/Application Support/lemonpie/`  | `~/Library/Application Support/lemonpie/sessions/`        |
+| Windows  | `%LOCALAPPDATA%\lemonpie\`                 | `%LOCALAPPDATA%\lemonpie\sessions\`                       |
+
 
 Both are overridable via environment variables — `LEMONPIE_CONFIG_DIR` and `LEMONPIE_SESSIONS_DIR` — useful for testing or running in a container.
 

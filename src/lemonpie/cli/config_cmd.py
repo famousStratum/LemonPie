@@ -11,20 +11,20 @@ Usage examples:
   lmConfig --list-models                           # View configured models
 """
 
-import argparse, json, os, sys
-from urllib.parse import urlparse
+import argparse
+import json
+import sys
 
-from lemonpie.paths import CONFIG_FILE
 from lemonpie.cli.ui import confirm
-from lemonpie.engine.models import (
-    find_by_alias,
-    find_by_name,
-)
 from lemonpie.config import (
     ensure_models_list,
     is_valid_url,
     load_config,
     save_config,
+)
+from lemonpie.engine.models import (
+    find_by_alias,
+    find_by_name,
 )
 
 
@@ -80,8 +80,8 @@ def cmd_add_model(cfg, alias, model_name, force=False):
     was_empty = len(models) == 0
 
     # Find existing entries
-    idx_name, entry_by_name = find_by_name(cfg, model_name)
-    idx_alias, entry_by_alias = find_by_alias(cfg, alias)
+    _idx_name, entry_by_name = find_by_name(cfg, model_name)
+    _idx_alias, entry_by_alias = find_by_alias(cfg, alias)
 
     # Exact mapping exists -> no-op
     if entry_by_alias and entry_by_name and entry_by_alias is entry_by_name:
@@ -146,7 +146,7 @@ def cmd_remove_model(cfg, identifier):
     """
     ensure_models_list(cfg)
 
-    idx_alias, entry_alias = find_by_alias(cfg, identifier)
+    _idx_alias, entry_alias = find_by_alias(cfg, identifier)
     if entry_alias:
         # Clear alias only
         if not confirm(f'Clear alias "{identifier}" from model "{entry_alias["name"]}"? (model will remain accessible by full name)'):

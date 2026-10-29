@@ -23,9 +23,8 @@ import json
 
 import pytest
 
-import lemonpie.config as config
-import lemonpie.paths as paths
-import lemonpie.sessions.storage as storage
+from lemonpie import config, paths
+from lemonpie.sessions import storage
 
 
 @pytest.fixture
