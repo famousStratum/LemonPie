@@ -2,15 +2,6 @@
 
 Planned features and improvements
 
-## lmConfig --init
-Interactive setup command that:
-- Prompts for Ollama server IP:port
-- Verifies server reachability
-- Lists available models if server responds
-- Allows user to select models to add
-- Handles cases where no models are found (with guidance to Ollama docs)
-- Supports `--force` to override verification or alias conflicts
-
 ## Model verification state machine
 Planned logic for `lmConfig --add-model`:
 - Check server reachability

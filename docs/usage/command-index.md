@@ -8,13 +8,15 @@ Useful for both **users** (cheat sheet) and **developers** (tracking CLI surface
 ## lmConfig
 Manage LemonPie configuration (`config.json`).
 
+- `--init` — Interactive setup wizard: prompt for server URL, verify reachability, list and select installed models, optionally set a default
+- `--init --force` — Same as `--init` but skip server verification
 - `--host <url>` — Set Ollama host URL (`http(s)://host:port`)
 - `--default-model <name>` — Set default model using alias or full name (must exist in models)
 - `--add-model <alias> <model>` — Add model mapping: alias → model_full_name
 - `--remove-model <identifier>` — Remove a model mapping by alias or full name
 - `--list-models` — List configured model aliases and names
 - `--show` — Print full `config.json`
-- `--force` — Force overwrite when adding a model
+- `--force` — Force overwrite when adding a model; skip server verification when used with `--init`
 
 ---
 
@@ -38,5 +40,5 @@ Run LemonPie with a given model or prompt.
 ## Notes
 - Flags can be combined with prompts, e.g.:
 `lm -m smollm:360m -n "Hello world"`
-- `--force` applies only to `lmConfig --add-model`.
-- Future flags (e.g., `--autocomplete`, `--init`) will be added here as they are introduced.
+- `--force` applies to `lmConfig --add-model` (overwrite alias conflicts) and `lmConfig --init` (skip server verification).
+- Future flags will be added here as they are introduced.

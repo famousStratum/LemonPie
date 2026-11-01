@@ -14,6 +14,7 @@ LemonPie is a compact CLI for interacting with an Ollama server. It manages chat
 - Start and manage chat sessions with Ollama models
 - Persist session history in your OS's standard user data directory
 - Configure host, default model, and aliases via a config file in your OS's standard user config directory
+- Interactive setup wizard (`lmConfig --init`) for first-time configuration — verifies server reachability and lists available models for selection
 - Add, remove, and list models with aliases (`lmConfig`)
 - Switch models mid‑session with confirmation
 - Atomic writes for safety (tmp + replace)
@@ -65,7 +66,7 @@ LemonPie keeps its config file and session history in your OS's standard user di
 
 Both are overridable via environment variables — `LEMONPIE_CONFIG_DIR` and `LEMONPIE_SESSIONS_DIR` — useful for testing or running in a container.
 
-`docs/config.example.json` is a template. `lmConfig` will create your real config file on first use if one doesn't exist yet.
+`docs/config.example.json` is a template. Run `lmConfig --init` to set up your config interactively — it verifies server reachability, lists installed models for selection, and writes the file for you. `lmConfig` also auto-creates a minimal config on first use if you prefer to configure manually.
 
 ### Example structure:
 ```json
@@ -103,7 +104,13 @@ models: list of objects with alias (nullable) and name
 `lm -m qwen2.5-coder:3b`
 
 ### `lmConfig`
-- Manage models with lmConfig\
+- First-time setup\
+`lmConfig --init`
+
+- First-time setup (skip server verification)\
+`lmConfig --init --force`
+
+- Manage models\
 `lmConfig --add-model qwen qwen2.5-coder:3b`\
 `lmConfig --list-models`\
 `lmConfig --remove-model qwen`
@@ -115,7 +122,6 @@ models: list of objects with alias (nullable) and name
 Planned features and improvements:
 
 - Code completion (autocomplete)
-- lmConfig --init
 - Model verification state machine
 - Enhanced error handling and user feedback
 - Cross‑platform packaging (apt, winget, Homebrew)
