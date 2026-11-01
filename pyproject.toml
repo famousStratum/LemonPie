@@ -26,7 +26,7 @@ dependencies = [
 ]
 
 [project.urls]
-homepage = "https://versicode.com/lemonpie"
+homepage = "https://versicode.com/projects/lemon-pie"
 repository = "https://github.com/famousStratum/LemonPie"
 issues = "https://github.com/famousStratum/LemonPie/issues"
 
