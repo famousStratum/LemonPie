@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """
-lm_config.py (alias: lmConfig) — CLI for managing LemonPie configuration.
+config_cmd.py (alias: lmConfig) — CLI for managing LemonPie configuration.
 
 Usage examples:
+  lmConfig --init                                  # Interactive setup wizard
   lmConfig --host http://127.0.0.1:11434           # Set Ollama server URL
   lmConfig --add-model qwen qwen2.5-coder:3b       # Map an alias to a model
   lmConfig --add-model qwen qwen2.5:1.5b --force   # Reassign an existing alias
@@ -13,10 +14,14 @@ Usage examples:
 
 import argparse
 import json
+import os
 import sys
+
+import httpx
 
 from lemonpie.cli.ui import confirm
 from lemonpie.config import (
+    config_file_path,
     ensure_models_list,
     is_valid_url,
     load_config,
@@ -26,6 +31,228 @@ from lemonpie.engine.models import (
     find_by_alias,
     find_by_name,
 )
+
+# ---------------------------------------------------------------------------
+# lmConfig --init helpers
+# ---------------------------------------------------------------------------
+
+
+def fetch_ollama_models(server):
+    """GET /api/tags and return (list_of_name_strings, error_str_or_None).
+
+    Used by cmd_init to verify server reachability and discover installed
+    models in a single round-trip.
+    """
+    try:
+        resp = httpx.get(f"{server.rstrip('/')}/api/tags", timeout=5.0)
+        resp.raise_for_status()
+        data = resp.json()
+        return [m["name"] for m in data.get("models", [])], None
+    except httpx.ConnectError:
+        return [], "Connection refused"
+    except httpx.TimeoutException:
+        return [], "Connection timed out"
+    except httpx.HTTPError as exc:
+        return [], f"HTTP error: {exc}"
+    except (json.JSONDecodeError, KeyError, TypeError) as exc:
+        return [], f"Invalid response format from server, {exc}"
+
+
+def _prompt_model_selection(available_models):
+    """Show a numbered list of server-installed models; return selected entries.
+
+    The user enters space-separated numbers (e.g. ``1 3``).  For each chosen
+    model an optional alias is collected.  Pressing Enter without typing
+    anything skips model registration entirely.
+    """
+    print("\n  Available models:")
+    for i, name in enumerate(available_models, 1):
+        print(f"    {i}. {name}")
+
+    raw = input("\n  Select models to add (e.g. 1 3), Enter to skip: ").strip()
+    if not raw:
+        return []
+
+    selected = []
+    seen: set[str] = set()
+    for token in raw.split():
+        try:
+            idx = int(token) - 1
+        except ValueError:
+            print(f"  Skipping invalid token: {token!r}")
+            continue
+        if not (0 <= idx < len(available_models)):
+            print(f"  Out of range, skipping: {token!r}")
+            continue
+        name = available_models[idx]
+        if name in seen:
+            continue
+        seen.add(name)
+        alias_raw = input(f"  Alias for {name!r} (optional, Enter to skip): ").strip()
+        selected.append({"alias": alias_raw or None, "name": name})
+
+    return selected
+
+
+def _prompt_model_manual():
+    """Collect one or more model entries by hand (name + optional alias)."""
+    models = []
+    while True:
+        while True:
+            name = input("  Model name (e.g. qwen2.5-coder:3b): ").strip()
+            if name:
+                break
+            print("  Model name cannot be empty.")
+        alias_raw = input("  Alias (optional, Enter to skip): ").strip()
+        models.append({"alias": alias_raw or None, "name": name})
+        if not confirm("  Add another model?"):
+            break
+    return models
+
+
+def _prompt_default(models):
+    """Ask which of the configured models should be the default.
+
+    Returns the chosen model name, or None if the user declines / there are
+    no models to choose from.
+    """
+    if not models:
+        return None
+
+    if len(models) == 1:
+        if confirm(f'  Set "{models[0]["name"]}" as the default model?'):
+            return models[0]["name"]
+        return None
+
+    # Multiple models — let the user pick by number.
+    if not confirm("  Set a default model?"):
+        return None
+
+    for i, m in enumerate(models, 1):
+        alias_disp = m.get("alias") or "<no alias>"
+        print(f"    {i}. {alias_disp} -> {m['name']}")
+
+    while True:
+        raw = input(f"  Enter number (1-{len(models)}): ").strip()
+        try:
+            idx = int(raw) - 1
+            if 0 <= idx < len(models):
+                return models[idx]["name"]
+        except ValueError:
+            pass
+        print(f"  Invalid choice, enter 1-{len(models)}.")
+
+
+# ---------------------------------------------------------------------------
+# lmConfig --init
+# ---------------------------------------------------------------------------
+
+
+def cmd_init(force=False):
+    """Interactive wizard: create or reset config.json from scratch.
+
+    Steps
+    -----
+    1. Warn if a config already exists; ask for confirmation to overwrite.
+    2. Prompt for the Ollama server URL (validated; loops on bad input).
+    3. Unless ``--force``, verify server reachability via ``GET /api/tags``.
+       - If reachable: present the installed-model list for selection.
+       - If unreachable: offer to continue without verification.
+    4. If no server models are available, offer manual model entry.
+    5. Optionally set a default model.
+    6. Save and print a summary.
+
+    ``--force`` skips step 3 entirely (useful when the server is offline
+    during setup or to bypass alias-conflict checks on subsequent adds).
+    """
+    path = config_file_path()
+    if os.path.exists(path):
+        print(f"Config already exists: {path}")
+        if not confirm("Reinitialize from scratch?"):
+            print("Aborted.")
+            return 1
+
+    print("\nLemonPie setup\n")
+
+    # ------------------------------------------------------------------
+    # Step 1: Server URL
+    # ------------------------------------------------------------------
+    default_server = "http://127.0.0.1:11434"
+    while True:
+        raw = input(f"Ollama server URL [{default_server}]: ").strip()
+        server = raw or default_server
+        if is_valid_url(server):
+            break
+        print(f"  Invalid URL: {server!r}. Must start with http:// or https://.")
+
+    # ------------------------------------------------------------------
+    # Step 2: Verify server & discover models
+    # ------------------------------------------------------------------
+    available_models: list[str] = []
+    server_ok = False
+
+    if force:
+        print("  Skipping server verification (--force).")
+    else:
+        print(f"  Connecting to {server} ...", end="", flush=True)
+        available_models, err = fetch_ollama_models(server)
+        if err:
+            print(f" failed.\n  {err}")
+            if not confirm("  Continue without verification?"):
+                print("Aborted.")
+                return 1
+        else:
+            server_ok = True
+            count = len(available_models)
+            label = f"{count} model(s) available" if count else "no models installed"
+            print(f" OK ({label})")
+
+    # ------------------------------------------------------------------
+    # Step 3: Select / add models
+    # ------------------------------------------------------------------
+    models: list[dict] = []
+
+    if available_models:
+        models = _prompt_model_selection(available_models)
+    else:
+        if server_ok:
+            # Reachable but empty — give actionable guidance.
+            print("  No models are installed on this server.")
+            print("  Run `ollama pull <model>` to install one, then")
+            print("  use `lmConfig --add-model <alias> <name>` to register it.")
+
+        if confirm("  Add a model manually?"):
+            models = _prompt_model_manual()
+
+    # ------------------------------------------------------------------
+    # Step 4: Default model
+    # ------------------------------------------------------------------
+    default = _prompt_default(models)
+
+    # ------------------------------------------------------------------
+    # Step 5: Save & summarise
+    # ------------------------------------------------------------------
+    cfg = {"server": server, "default": default, "models": models}
+    save_config(cfg)
+
+    print("\nConfig saved.")
+    print(f"  Server : {server}")
+    print(f"  Default: {default or '<none>'}")
+    if models:
+        for m in models:
+            mark = "*" if m.get("name") == default else " "
+            alias_disp = m.get("alias") or "<no alias>"
+            print(f"  {mark} {alias_disp} -> {m['name']}")
+    else:
+        print("  No models configured yet.")
+        print("  Use `lmConfig --add-model <alias> <name>` to add models later.")
+
+    return 0
+
+
+# ---------------------------------------------------------------------------
+# Existing lmConfig sub-commands
+# ---------------------------------------------------------------------------
 
 
 def cmd_set_host(cfg, host):
@@ -49,7 +276,7 @@ def cmd_set_default(cfg, identifier):
     if m:
         cfg["default"] = m["name"]
         save_config(cfg)
-        print(f'Default model set to {m["name"]} (alias: {identifier})')
+        print(f"Default model set to {m['name']} (alias: {identifier})")
         return 0
 
     # Try full model name
@@ -57,12 +284,14 @@ def cmd_set_default(cfg, identifier):
     if m:
         cfg["default"] = m["name"]
         save_config(cfg)
-        print(f'Default model set to {m["name"]}')
+        print(f"Default model set to {m['name']}")
         return 0
 
-    print(f'Model "{identifier}" not found.'
-          f' Use --list-models to see configured models.'
-          f' Use --add-model to add a new model mapping.')
+    print(
+        f'Model "{identifier}" not found.'
+        f" Use --list-models to see configured models."
+        f" Use --add-model to add a new model mapping."
+    )
     return 2
 
 
@@ -89,20 +318,30 @@ def cmd_add_model(cfg, alias, model_name, force=False):
         return 0
 
     # If model_name exists under a different alias
-    if entry_by_name and entry_by_name.get("alias") and entry_by_name.get("alias") != alias:
+    if (
+        entry_by_name
+        and entry_by_name.get("alias")
+        and entry_by_name.get("alias") != alias
+    ):
         existing_alias = entry_by_name["alias"]
         if not force:
-            print(f'Model "{model_name}" is already mapped to alias "{existing_alias}". Use --force to reassign.')
+            print(
+                f'Model "{model_name}" is already mapped to alias "{existing_alias}". Use --force to reassign.'
+            )
             return 2
         # force: clear the old alias (set to None) but keep the model record
-        print(f'Removing alias "{existing_alias}" from model "{model_name}". It will remain accessible by full name.')
+        print(
+            f'Removing alias "{existing_alias}" from model "{model_name}". It will remain accessible by full name.'
+        )
         entry_by_name["alias"] = None
 
     # If alias exists and maps to a different model
     if entry_by_alias and entry_by_alias.get("name") != model_name:
         existing_model = entry_by_alias["name"]
         if not force:
-            print(f'Alias "{alias}" is already in use for model "{existing_model}". Please use a different alias or remove the existing mapping.')
+            print(
+                f'Alias "{alias}" is already in use for model "{existing_model}". Please use a different alias or remove the existing mapping.'
+            )
             return 2
         # force: clear the alias on the existing model object (set to None),
         # but keep the model object (do not delete it).
@@ -127,7 +366,7 @@ def cmd_add_model(cfg, alias, model_name, force=False):
     # Otherwise, alias is free and model_name is new -> create new object
     models.append({"alias": alias, "name": model_name})
     save_config(cfg)
-    print(f'Added model mapping: {alias} -> {model_name}')
+    print(f"Added model mapping: {alias} -> {model_name}")
 
     # If this was the first model added, make it the default
     if was_empty:
@@ -149,7 +388,9 @@ def cmd_remove_model(cfg, identifier):
     _idx_alias, entry_alias = find_by_alias(cfg, identifier)
     if entry_alias:
         # Clear alias only
-        if not confirm(f'Clear alias "{identifier}" from model "{entry_alias["name"]}"? (model will remain accessible by full name)'):
+        if not confirm(
+            f'Clear alias "{identifier}" from model "{entry_alias["name"]}"? (model will remain accessible by full name)'
+        ):
             print("Aborted.")
             return 1
         entry_alias["alias"] = None
@@ -160,7 +401,9 @@ def cmd_remove_model(cfg, identifier):
     idx_name, entry_name = find_by_name(cfg, identifier)
     if entry_name:
         # Remove entire model object
-        if not confirm(f'Remove model "{identifier}" entirely from config? This will delete the record.'):
+        if not confirm(
+            f'Remove model "{identifier}" entirely from config? This will delete the record.'
+        ):
             print("Aborted.")
             return 1
         del cfg["models"][idx_name]
@@ -196,21 +439,59 @@ def cmd_show(cfg):
     return 0
 
 
+# ---------------------------------------------------------------------------
+# Parser & entry-point
+# ---------------------------------------------------------------------------
+
+
 def build_parser():
-    parser = argparse.ArgumentParser(prog="lmConfig", description="Manage LemonPie configuration (config.json)")
+    parser = argparse.ArgumentParser(
+        prog="lmConfig",
+        description="Manage LemonPie configuration (config.json)",
+    )
+    parser.add_argument(
+        "--init",
+        action="store_true",
+        help="Interactive setup wizard: create or reinitialize config.json",
+    )
     parser.add_argument("--host", help="Set Ollama host URL (http(s)://host:port)")
-    parser.add_argument("--default-model", help="Set default model using alias or full name (must exist in models)")
-    parser.add_argument("--add-model", nargs=2, metavar=("ALIAS", "MODEL"), help="Add model mapping: alias model_full_name")
-    parser.add_argument("--remove-model", metavar="IDENTIFIER", help="Remove a model mapping by alias or full name")
-    parser.add_argument("--list-models", action="store_true", help="List configured model aliases and names")
+    parser.add_argument(
+        "--default-model",
+        help="Set default model using alias or full name (must exist in models)",
+    )
+    parser.add_argument(
+        "--add-model",
+        nargs=2,
+        metavar=("ALIAS", "MODEL"),
+        help="Add model mapping: alias model_full_name",
+    )
+    parser.add_argument(
+        "--remove-model",
+        metavar="IDENTIFIER",
+        help="Remove a model mapping by alias or full name",
+    )
+    parser.add_argument(
+        "--list-models",
+        action="store_true",
+        help="List configured model aliases and names",
+    )
     parser.add_argument("--show", action="store_true", help="Print full config.json")
-    parser.add_argument("--force", action="store_true", help="Force overwrite when adding a model")
+    parser.add_argument(
+        "--force",
+        action="store_true",
+        help="Force overwrite when adding a model; skip server verification with --init",
+    )
     return parser
 
 
 def main():
     parser = build_parser()
     args = parser.parse_args()
+
+    # --init is handled before load_config() so it can decide for itself
+    # whether the file already exists without triggering auto-creation.
+    if args.init:
+        return cmd_init(force=args.force)
 
     cfg = load_config()
 
