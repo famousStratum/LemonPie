@@ -73,6 +73,7 @@ class TestLmParser:
 class TestLmConfigParser:
     def test_no_args_all_defaults(self):
         args = build_lmconfig_parser().parse_args([])
+        assert args.init is False
         assert args.host is None
         assert args.default_model is None
         assert args.add_model is None
@@ -80,6 +81,15 @@ class TestLmConfigParser:
         assert args.list_models is False
         assert args.show is False
         assert args.force is False
+
+    def test_init_flag(self):
+        args = build_lmconfig_parser().parse_args(["--init"])
+        assert args.init is True
+
+    def test_init_with_force(self):
+        args = build_lmconfig_parser().parse_args(["--init", "--force"])
+        assert args.init is True
+        assert args.force is True
 
     def test_host(self):
         args = build_lmconfig_parser().parse_args(["--host", "http://127.0.0.1:11434"])

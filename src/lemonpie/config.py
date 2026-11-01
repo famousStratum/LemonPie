@@ -13,10 +13,15 @@ def save_config(cfg):
         json.dump(cfg, f, indent=2, ensure_ascii=False)
     os.replace(tmp, CONFIG_FILE)
 
+
 def load_config():
     if not os.path.exists(CONFIG_FILE):
         # default structure uses list-of-objects for models
-        default_cfg = {"server": "http://127.0.0.1:11434", "default": None, "models": []}
+        default_cfg = {
+            "server": "http://127.0.0.1:11434",
+            "default": None,
+            "models": [],
+        }
         save_config(default_cfg)
         return default_cfg
 
@@ -29,19 +34,35 @@ def load_config():
     cfg.setdefault("models", [])
     return cfg
 
+
 def resolve_server_host(cfg):
     return os.environ.get("OLLAMA_HOST") or cfg.get("server")
+
 
 def is_valid_url(url):
     try:
         p = urlparse(url)
-        return p.scheme in ("http", "https") and p.netloc != ""
-    except Exception:
+    except (TypeError, AttributeError, ValueError):
         return False
+
+    return p.scheme in ("http", "https") and bool(p.netloc)
+
 
 def ensure_models_list(cfg):
     if not isinstance(cfg.get("models"), list):
         cfg["models"] = []
+
+
+def config_file_path():
+    """Return the active config file path.
+
+    Accessing CONFIG_FILE through this function (rather than importing it
+    directly) lets callers stay in sync with monkeypatching done by the test
+    fixtures — they patch ``lemonpie.config.CONFIG_FILE``, so any code that
+    reads it at call-time sees the patched value automatically.
+    """
+    return CONFIG_FILE
+
 
 def build_timeout():
     return httpx.Timeout(connect=5.0, read=600.0, write=30.0, pool=5.0)
