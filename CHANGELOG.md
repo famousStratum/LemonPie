@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.2.0-rc2](https://github.com/famousStratum/LemonPie/compare/v0.2.0-rc1...v0.2.0-rc2) (2026-11-01)
+
+
+### Features
+
+* lmConfig --init — interactive setup wizard ([#37](https://github.com/famousStratum/LemonPie/issues/37)) ([a9cc56d](https://github.com/famousStratum/LemonPie/commit/a9cc56db38ee17735fbdd6d607a34cd06e352372))
+
+
+### Documentation
+
+* reflect lmConfig --init in README and /docs ([#38](https://github.com/famousStratum/LemonPie/issues/38)) ([b1d0bd9](https://github.com/famousStratum/LemonPie/commit/b1d0bd95f1e96be12a4dea24ef79a5711deebdf1))
+* split roadmap into design docs and add command reference ([#34](https://github.com/famousStratum/LemonPie/issues/34)) ([a382aac](https://github.com/famousStratum/LemonPie/commit/a382aac6d480963fce7f4486926e315a51741aaf))
+
 ## [0.2.0-rc1](https://github.com/famousStratum/LemonPie/compare/v0.2.0-beta.1...v0.2.0-rc1) (2026-09-22)
 
 
