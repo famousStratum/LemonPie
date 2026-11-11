@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.1](https://github.com/famousStratum/LemonPie/compare/v0.2.0...v0.2.1) (2026-11-11)
+
+
+### Features
+
+* add multi-backend support for OpenAI-compatible inference servers ([#42](https://github.com/famousStratum/LemonPie/issues/42)) ([e2b8659](https://github.com/famousStratum/LemonPie/commit/e2b8659b702b13bb753967f9fe69a83e392e1643))
+
 ## [0.2.0](https://github.com/famousStratum/LemonPie/compare/v0.2.0-rc2...v0.2.0) (2026-11-11)
 
 
