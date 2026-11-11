@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 [project]
 name = "lemonpie-cli"
 dynamic = ["version"]
-description = "LemonPie — A lightweight CLI for OpenAI-compatible inference servers"
+description = "LemonPie — A lightweight CLI for LLM inference servers"
 authors = [
   { name = "famousStratum", email = "info@versicode.com" }
 ]

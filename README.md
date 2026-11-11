@@ -4,7 +4,7 @@
 ![GitHub License](https://img.shields.io/github/license/famousstratum/lemonpie)
 ![Python Version from PEP 621 TOML](https://img.shields.io/python/required-version-toml?tomlFilePath=https%3A%2F%2Fraw.githubusercontent.com%2FfamousStratum%2FLemonPie%2Frefs%2Fheads%2Fmain%2Fpyproject.toml)
 
-**LemonPie — A lightweight CLI for OpenAI-compatible inference servers**
+**LemonPie — A lightweight CLI for LLM inference servers**
 
 LemonPie is a compact CLI for chatting with any OpenAI-compatible inference server — Ollama, llama.cpp, LM Studio, vLLM, and others. It manages chat sessions and persists history locally, designed to be tiny and portable — ideal for lightweight systems and terminal users, but usable anywhere with Python and network access.
 
@@ -34,7 +34,7 @@ LemonPie/
 │       ├── config.py        # Configuration logic & I/O
 │       ├── paths.py         # OS-appropriate config/data directory resolution
 │       ├── time_utils.py    # Timestamp helpers
-│       ├── client.py        # OpenAI-compatible HTTP client & error handling
+│       ├── client.py        # HTTP client & error handling
 │       ├── models.py        # Model finding & resolution
 │       ├── cli/
 │       │   ├── parser.py    # Argument parsing (lm)
