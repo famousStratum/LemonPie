@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.0](https://github.com/famousStratum/LemonPie/compare/v0.2.0-rc2...v0.2.0) (2026-11-11)
+
+
+### Documentation
+
+* Make all links absolute in README.md ([#40](https://github.com/famousStratum/LemonPie/issues/40)) ([3ec603e](https://github.com/famousStratum/LemonPie/commit/3ec603e4861008303ccdedc6736dbb178fe52c8c))
+
 ## [0.2.0-rc2](https://github.com/famousStratum/LemonPie/compare/v0.2.0-rc1...v0.2.0-rc2) (2026-11-01)
 
 
