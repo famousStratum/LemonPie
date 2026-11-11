@@ -10,12 +10,23 @@ Approach
 globally with an iterator so every prompt consumes the next queued response
 in order, making the full interaction deterministic.
 
-``fetch_ollama_models`` makes a network request, so every test that reaches
+``fetch_available_models`` makes a network request, so every test that reaches
 the server-verification step mocks it at the module level via monkeypatch.
 
 All tests that touch the filesystem use the ``isolated_dirs`` fixture from
 conftest.py, which redirects ``lemonpie.config.CONFIG_FILE`` and the session
 paths to a throw-away temp directory.
+
+Input sequence for cmd_init (new flow)
+---------------------------------------
+1. Backend selection          → digit ("1"=llama.cpp, "2"=Ollama, "3"=LM Studio, "4"=Other)
+2. Local? confirm             → "y" / "n"
+   2a. If local + known port  → digit ("1"=default URL, "2"=custom)
+       2a-custom              → URL string
+   2b. If not local           → URL string
+3. [Server verification — mocked or skipped with --force]
+4. Model selection / manual add prompts
+5. Default model prompts
 """
 
 import json
@@ -44,25 +55,39 @@ def _read_cfg(isolated_dirs):
 
 class TestCmdInitForce:
     def test_force_fresh_no_models(self, isolated_dirs, monkeypatch):
-        """--force, accept default server, skip manual model entry."""
-        # input sequence: server URL (empty → default), "add model?" → n
-        monkeypatch.setattr("builtins.input", _make_input(["", "n"]))
-        assert cmd_init(force=True) == 0
-
-        cfg = _read_cfg(isolated_dirs)
-        assert cfg["server"] == "http://127.0.0.1:11434"
-        assert cfg["models"] == []
-        assert cfg["default"] is None
-
-    def test_force_custom_server(self, isolated_dirs, monkeypatch):
-        """--force, custom server URL accepted without contacting it."""
+        """--force, Ollama local default URL, skip manual model entry."""
         monkeypatch.setattr(
             "builtins.input",
-            _make_input(["http://192.168.1.10:11434", "n"]),
+            _make_input([
+                "2",  # Ollama
+                "y",  # local
+                "1",  # default URL
+                "n",  # add model manually? no
+            ]),
         )
         assert cmd_init(force=True) == 0
 
         cfg = _read_cfg(isolated_dirs)
+        assert cfg["backend"] == "ollama"
+        assert cfg["server"] == "http://localhost:11434"
+        assert cfg["models"] == []
+        assert cfg["default"] is None
+
+    def test_force_custom_server(self, isolated_dirs, monkeypatch):
+        """--force, Ollama remote custom URL accepted without contacting it."""
+        monkeypatch.setattr(
+            "builtins.input",
+            _make_input([
+                "2",                          # Ollama
+                "n",                          # not local
+                "http://192.168.1.10:11434",  # remote URL
+                "n",                          # no models
+            ]),
+        )
+        assert cmd_init(force=True) == 0
+
+        cfg = _read_cfg(isolated_dirs)
+        assert cfg["backend"] == "ollama"
         assert cfg["server"] == "http://192.168.1.10:11434"
 
     def test_force_manual_model_with_alias_set_as_default(
@@ -71,16 +96,16 @@ class TestCmdInitForce:
         """--force, add one model manually with alias, set as default."""
         monkeypatch.setattr(
             "builtins.input",
-            _make_input(
-                [
-                    "",  # default server
-                    "y",  # add model manually?
-                    "qwen2.5-coder:3b",  # model name
-                    "qwen",  # alias
-                    "n",  # add another?
-                    "y",  # set as default?
-                ]
-            ),
+            _make_input([
+                "2",               # Ollama
+                "y",               # local
+                "1",               # default URL
+                "y",               # add model manually?
+                "qwen2.5-coder:3b",  # model name
+                "qwen",            # alias
+                "n",               # add another?
+                "y",               # set as default?
+            ]),
         )
         assert cmd_init(force=True) == 0
 
@@ -92,7 +117,16 @@ class TestCmdInitForce:
         """--force, add one model with no alias; decline set-as-default."""
         monkeypatch.setattr(
             "builtins.input",
-            _make_input(["", "y", "qwen2.5-coder:3b", "", "n", "n"]),
+            _make_input([
+                "2",               # Ollama
+                "y",               # local
+                "1",               # default URL
+                "y",               # add model manually?
+                "qwen2.5-coder:3b",
+                "",                # no alias
+                "n",               # add another?
+                "n",               # set as default?
+            ]),
         )
         assert cmd_init(force=True) == 0
 
@@ -104,20 +138,20 @@ class TestCmdInitForce:
         """--force, two models added; pick the second as default."""
         monkeypatch.setattr(
             "builtins.input",
-            _make_input(
-                [
-                    "",  # default server
-                    "y",  # add model?
-                    "qwen2.5-coder:3b",  # model 1
-                    "qwen",  # alias 1
-                    "y",  # add another?
-                    "llama3.2:1b",  # model 2
-                    "llama",  # alias 2
-                    "n",  # add another?
-                    "y",  # set default?
-                    "2",  # pick model 2
-                ]
-            ),
+            _make_input([
+                "2",               # Ollama
+                "y",               # local
+                "1",               # default URL
+                "y",               # add model?
+                "qwen2.5-coder:3b",
+                "qwen",
+                "y",               # add another?
+                "llama3.2:1b",
+                "llama",
+                "n",               # no more
+                "y",               # set default?
+                "2",               # pick model 2
+            ]),
         )
         assert cmd_init(force=True) == 0
 
@@ -133,9 +167,9 @@ class TestCmdInitForce:
 
 class TestCmdInitServerOk:
     def _mock_server(self, monkeypatch, models):
-        """Patch fetch_ollama_models to return *models* with no error."""
+        """Patch fetch_available_models to return *models* with no error."""
         monkeypatch.setattr(
-            "lemonpie.cli.config_cmd.fetch_ollama_models",
+            "lemonpie.cli.config_cmd.fetch_available_models",
             lambda _server: (models, None),
         )
 
@@ -144,14 +178,14 @@ class TestCmdInitServerOk:
         self._mock_server(monkeypatch, ["qwen2.5-coder:3b", "llama3.2:1b"])
         monkeypatch.setattr(
             "builtins.input",
-            _make_input(
-                [
-                    "",  # default server
-                    "1",  # select model 1
-                    "qwen",  # alias for qwen2.5-coder:3b
-                    "y",  # set as default?
-                ]
-            ),
+            _make_input([
+                "2",    # Ollama
+                "y",    # local
+                "1",    # default URL
+                "1",    # select model 1
+                "qwen", # alias
+                "y",    # set as default?
+            ]),
         )
         assert cmd_init() == 0
 
@@ -166,16 +200,16 @@ class TestCmdInitServerOk:
         self._mock_server(monkeypatch, ["qwen2.5-coder:3b", "llama3.2:1b"])
         monkeypatch.setattr(
             "builtins.input",
-            _make_input(
-                [
-                    "",  # default server
-                    "1 2",  # select both
-                    "qwen",  # alias for model 1
-                    "",  # no alias for model 2
-                    "y",  # set default?
-                    "2",  # pick model 2
-                ]
-            ),
+            _make_input([
+                "2",    # Ollama
+                "y",    # local
+                "1",    # default URL
+                "1 2",  # select both
+                "qwen", # alias for model 1
+                "",     # no alias for model 2
+                "y",    # set default?
+                "2",    # pick model 2
+            ]),
         )
         assert cmd_init() == 0
 
@@ -188,12 +222,12 @@ class TestCmdInitServerOk:
         self._mock_server(monkeypatch, ["qwen2.5-coder:3b"])
         monkeypatch.setattr(
             "builtins.input",
-            _make_input(
-                [
-                    "",  # default server
-                    "",  # skip selection (Enter)
-                ]
-            ),
+            _make_input([
+                "2",  # Ollama
+                "y",  # local
+                "1",  # default URL
+                "",   # skip selection (Enter)
+            ]),
         )
         assert cmd_init() == 0
 
@@ -208,14 +242,14 @@ class TestCmdInitServerOk:
         self._mock_server(monkeypatch, ["qwen2.5-coder:3b"])
         monkeypatch.setattr(
             "builtins.input",
-            _make_input(
-                [
-                    "",  # default server
-                    "0 99 abc 1",  # 0 and 99 out of range, 'abc' invalid, 1 valid
-                    "qwen",  # alias for model 1
-                    "y",  # set as default
-                ]
-            ),
+            _make_input([
+                "2",          # Ollama
+                "y",          # local
+                "1",          # default URL
+                "0 99 abc 1", # 0 and 99 out of range, 'abc' invalid, 1 valid
+                "qwen",       # alias for model 1
+                "y",          # set as default
+            ]),
         )
         assert cmd_init() == 0
 
@@ -229,12 +263,12 @@ class TestCmdInitServerOk:
         self._mock_server(monkeypatch, [])
         monkeypatch.setattr(
             "builtins.input",
-            _make_input(
-                [
-                    "",  # default server
-                    "n",  # skip manual add
-                ]
-            ),
+            _make_input([
+                "2",  # Ollama
+                "y",  # local
+                "1",  # default URL
+                "n",  # skip manual add
+            ]),
         )
         assert cmd_init() == 0
 
@@ -246,16 +280,16 @@ class TestCmdInitServerOk:
         self._mock_server(monkeypatch, [])
         monkeypatch.setattr(
             "builtins.input",
-            _make_input(
-                [
-                    "",  # default server
-                    "y",  # add manually?
-                    "qwen2.5-coder:3b",  # name
-                    "qwen",  # alias
-                    "n",  # add another?
-                    "y",  # set as default?
-                ]
-            ),
+            _make_input([
+                "2",               # Ollama
+                "y",               # local
+                "1",               # default URL
+                "y",               # add manually?
+                "qwen2.5-coder:3b",
+                "qwen",
+                "n",               # add another?
+                "y",               # set as default?
+            ]),
         )
         assert cmd_init() == 0
 
@@ -272,7 +306,7 @@ class TestCmdInitServerOk:
 class TestCmdInitServerUnreachable:
     def _mock_error(self, monkeypatch, err="Connection refused"):
         monkeypatch.setattr(
-            "lemonpie.cli.config_cmd.fetch_ollama_models",
+            "lemonpie.cli.config_cmd.fetch_available_models",
             lambda _server: ([], err),
         )
 
@@ -281,12 +315,12 @@ class TestCmdInitServerUnreachable:
         self._mock_error(monkeypatch)
         monkeypatch.setattr(
             "builtins.input",
-            _make_input(
-                [
-                    "",  # default server
-                    "n",  # abort after error
-                ]
-            ),
+            _make_input([
+                "2",  # Ollama
+                "y",  # local
+                "1",  # default URL
+                "n",  # abort after error
+            ]),
         )
         assert cmd_init() == 1
         assert not isolated_dirs["config_file"].exists()
@@ -296,22 +330,22 @@ class TestCmdInitServerUnreachable:
         self._mock_error(monkeypatch)
         monkeypatch.setattr(
             "builtins.input",
-            _make_input(
-                [
-                    "",  # default server
-                    "y",  # continue?
-                    "y",  # add manually?
-                    "qwen2.5-coder:3b",
-                    "qwen",
-                    "n",  # no more models
-                    "y",  # set as default?
-                ]
-            ),
+            _make_input([
+                "2",               # Ollama
+                "y",               # local
+                "1",               # default URL
+                "y",               # continue without verification?
+                "y",               # add manually?
+                "qwen2.5-coder:3b",
+                "qwen",
+                "n",               # no more models
+                "y",               # set as default?
+            ]),
         )
         assert cmd_init() == 0
 
         cfg = _read_cfg(isolated_dirs)
-        assert cfg["server"] == "http://127.0.0.1:11434"
+        assert cfg["server"] == "http://localhost:11434"
         assert cfg["models"] == [{"alias": "qwen", "name": "qwen2.5-coder:3b"}]
         assert cfg["default"] == "qwen2.5-coder:3b"
 
@@ -320,7 +354,13 @@ class TestCmdInitServerUnreachable:
         self._mock_error(monkeypatch)
         monkeypatch.setattr(
             "builtins.input",
-            _make_input(["", "y", "n"]),  # server, continue, no manual
+            _make_input([
+                "2",  # Ollama
+                "y",  # local
+                "1",  # default URL
+                "y",  # continue without verification?
+                "n",  # no manual models
+            ]),
         )
         assert cmd_init() == 0
 
@@ -339,7 +379,6 @@ class TestCmdInitExistingConfig:
         monkeypatch.setattr("builtins.input", _make_input(["n"]))
         assert cmd_init(force=True) == 1
 
-        # Config should still be the original sample_cfg written by write_cfg
         cfg = _read_cfg(isolated_dirs)
         assert cfg["models"][0]["alias"] == "qwen"
 
@@ -347,19 +386,19 @@ class TestCmdInitExistingConfig:
         """Existing config: user confirms — config is completely replaced."""
         monkeypatch.setattr(
             "builtins.input",
-            _make_input(
-                [
-                    "y",  # confirm reinit
-                    "",  # default server
-                    "n",  # no models
-                ]
-            ),
+            _make_input([
+                "y",  # confirm reinit
+                "2",  # Ollama
+                "y",  # local
+                "1",  # default URL
+                "n",  # no models
+            ]),
         )
         assert cmd_init(force=True) == 0
 
         cfg = _read_cfg(isolated_dirs)
         assert cfg["models"] == []
-        assert cfg["server"] == "http://127.0.0.1:11434"
+        assert cfg["server"] == "http://localhost:11434"
 
 
 # ---------------------------------------------------------------------------
@@ -371,19 +410,19 @@ class TestCmdInitInputValidation:
     def test_invalid_url_loops_until_valid(self, isolated_dirs, monkeypatch):
         """Bad URL triggers a re-prompt; second attempt accepted."""
         monkeypatch.setattr(
-            "lemonpie.cli.config_cmd.fetch_ollama_models",
+            "lemonpie.cli.config_cmd.fetch_available_models",
             lambda _: ([], None),
         )
         monkeypatch.setattr(
             "builtins.input",
-            _make_input(
-                [
-                    "not-a-url",  # invalid
-                    "also bad",  # invalid
-                    "http://127.0.0.1:11434",  # valid
-                    "n",  # no models
-                ]
-            ),
+            _make_input([
+                "4",                      # Other (no default port → custom URL)
+                "y",                      # local
+                "not-a-url",              # invalid
+                "also bad",               # invalid
+                "http://127.0.0.1:11434", # valid
+                "n",                      # no models
+            ]),
         )
         assert cmd_init() == 0
 
@@ -394,18 +433,18 @@ class TestCmdInitInputValidation:
         """Blank model name in manual-entry mode triggers a re-prompt."""
         monkeypatch.setattr(
             "builtins.input",
-            _make_input(
-                [
-                    "",  # default server
-                    "y",  # add model manually?
-                    "",  # empty name — invalid
-                    "",  # still empty — still invalid
-                    "qwen2.5-coder:3b",  # valid
-                    "qwen",  # alias
-                    "n",  # no more
-                    "y",  # set as default
-                ]
-            ),
+            _make_input([
+                "2",               # Ollama
+                "y",               # local
+                "1",               # default URL
+                "y",               # add model manually?
+                "",                # empty name — invalid
+                "",                # still empty — still invalid
+                "qwen2.5-coder:3b",
+                "qwen",
+                "n",               # no more
+                "y",               # set as default
+            ]),
         )
         assert cmd_init(force=True) == 0
 
@@ -415,23 +454,23 @@ class TestCmdInitInputValidation:
     def test_invalid_default_number_loops_until_valid(self, isolated_dirs, monkeypatch):
         """Out-of-range and non-numeric entries in the default-pick loop are retried."""
         monkeypatch.setattr(
-            "lemonpie.cli.config_cmd.fetch_ollama_models",
+            "lemonpie.cli.config_cmd.fetch_available_models",
             lambda _: (["qwen2.5-coder:3b", "llama3.2:1b"], None),
         )
         monkeypatch.setattr(
             "builtins.input",
-            _make_input(
-                [
-                    "",  # default server
-                    "1 2",  # select both models
-                    "qwen",  # alias for model 1
-                    "",  # no alias for model 2
-                    "y",  # set default?
-                    "5",  # out of range
-                    "abc",  # not a number
-                    "1",  # valid — pick first
-                ]
-            ),
+            _make_input([
+                "2",    # Ollama
+                "y",    # local
+                "1",    # default URL
+                "1 2",  # select both models
+                "qwen", # alias for model 1
+                "",     # no alias for model 2
+                "y",    # set default?
+                "5",    # out of range
+                "abc",  # not a number
+                "1",    # valid — pick first
+            ]),
         )
         assert cmd_init() == 0
 

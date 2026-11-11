@@ -18,7 +18,9 @@ def load_config():
     if not os.path.exists(CONFIG_FILE):
         # default structure uses list-of-objects for models
         default_cfg = {
-            "server": "http://127.0.0.1:11434",
+            "backend": None,
+            "server": None,
+            "api_key": None,
             "default": None,
             "models": [],
         }
@@ -29,14 +31,16 @@ def load_config():
         cfg = json.load(f)
 
     # Ensure structure keys exist
+    cfg.setdefault("backend", None)
     cfg.setdefault("server", None)
+    cfg.setdefault("api_key", None)
     cfg.setdefault("default", None)
     cfg.setdefault("models", [])
     return cfg
 
 
 def resolve_server_host(cfg):
-    return os.environ.get("OLLAMA_HOST") or cfg.get("server")
+    return os.environ.get("LEMONPIE_HOST") or cfg.get("server")
 
 
 def is_valid_url(url):

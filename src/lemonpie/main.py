@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """
-LemonPie (lm.py) — lightweight CLI for managing chat sessions with Ollama
+LemonPie (lm.py) — lightweight CLI for managing chat sessions with OpenAI-compatible endpoints
 
 Purpose
-  Manage chat sessions, send prompts to Ollama models, and persist session
-  history locally under `sessions/`. Configuration (host, default model, aliases)
+  Manage chat sessions, send prompts to models, and persist session history
+  locally under `sessions/`. Configuration (host, default model, aliases)
   is stored in `config.json`.
 
 Quick usage
@@ -19,6 +19,8 @@ See README.md for details and maintainer notes.
 
 import sys
 
+import httpx
+
 from lemonpie.cli.parser import build_parser
 from lemonpie.cli.ui import (
     CONNECTING_MSGS,
@@ -26,20 +28,20 @@ from lemonpie.cli.ui import (
     print_session,
     print_sessions_list,
 )
+from lemonpie.client import (
+    build_client,
+    resolve_error,
+    stream_chat,
+)
 from lemonpie.config import (
     build_timeout,
     load_config,
     resolve_server_host,
 )
-from lemonpie.engine.models import (
+from lemonpie.models import (
     find_by_name,
     handle_model_switch,
     resolve_model,
-)
-from lemonpie.engine.ollama import (
-    build_client,
-    resolve_ollama_error,
-    stream_chat,
 )
 from lemonpie.sessions.storage import (
     close_session,
@@ -58,7 +60,7 @@ def main():
     cfg = load_config()
     server_host = resolve_server_host(cfg)
     timeout = build_timeout()
-    client = build_client(server_host, timeout)
+    client = build_client(server_host, timeout, api_key=cfg.get("api_key"))
     default_model_name = cfg.get("default") or None
     parser = build_parser()
     args = parser.parse_args()
@@ -69,10 +71,11 @@ def main():
 
     current_id = read_current()
 
-        # Direct CLI actions
+    # Direct CLI actions
 
     if args.list:
-        print_sessions_list(); sys.exit(0)
+        print_sessions_list()
+        sys.exit(0)
 
     if args.print:
         if not current_id:
@@ -86,18 +89,22 @@ def main():
         sys.exit(0)
 
     if args.delete:
-        delete_session_by_id(args.delete); sys.exit(0)
+        delete_session_by_id(args.delete)
+        sys.exit(0)
 
     if args.close:
-        close_session(); sys.exit(0)
+        close_session()
+        sys.exit(0)
 
     if args.delete_all:
         confirm = input("Are you sure you want to delete ALL sessions? (y/N): ")
         if confirm.lower() in ("y", "yes"):
             count = delete_all_sessions()
-            print(f"Deleted {count} session(s)."); sys.exit(0)
+            print(f"Deleted {count} session(s).")
+            sys.exit(0)
         else:
-            print("Aborted."); sys.exit(0)
+            print("Aborted.")
+            sys.exit(0)
 
     model_flag = args.model is not None
     model = resolve_model(cfg, args.model, default_model_name)
@@ -107,11 +114,19 @@ def main():
         print("Use lmConfig to add one or pass a known alias with -m.")
         sys.exit(1)
 
-    if model_flag and not current_id and not args.new and not args.session and not args.prompt:
-        print(f'No current session.\n'
-              f'To create a new session with "{args.model}" use: lm -n -m {args.model}\n'
-              f'To change the model of a specific session: lm -s <id> -m {args.model}\n'
-              f'To change the default model use lmConfig.')
+    if (
+        model_flag
+        and not current_id
+        and not args.new
+        and not args.session
+        and not args.prompt
+    ):
+        print(
+            f"No current session.\n"
+            f'To create a new session with "{args.model}" use: lm -n -m {args.model}\n'
+            f"To change the model of a specific session: lm -s <id> -m {args.model}\n"
+            f"To change the default model use lmConfig."
+        )
         sys.exit(0)
 
     session = resolve_session(args, model, current_id)
@@ -128,12 +143,16 @@ def main():
     if args.prompt:
         user_prompt = " ".join(args.prompt)
         turn_ts = now_ts()
-        session["history"].append({"role": "user", "content": user_prompt, "ts": turn_ts})
+        session["history"].append(
+            {"role": "user", "content": user_prompt, "ts": turn_ts}
+        )
         session["updated_at"] = turn_ts
         save_session(session_id, session)
 
         if not find_by_name(cfg, model):
-            print(f'Configured models do not include "{model}". Use lmConfig to add it or pass a known alias.')
+            print(
+                f'Configured models do not include "{model}". Use lmConfig to add it or pass a known alias.'
+            )
             sys.exit(1)
 
         spinner = StatusSpinner(CONNECTING_MSGS)
@@ -142,6 +161,11 @@ def main():
         assistant_reply = ""
         reply_ts = None
         first_chunk_seen = False
+
+        if not server_host:
+            print("No server configured. Run `lmConfig --init` to get started.")
+            sys.exit(1)
+
         chunks = stream_chat(client, model, session["history"])
 
         try:
@@ -159,8 +183,8 @@ def main():
             print("\nInterrupted by user.")
             sys.exit(1)
 
-        except Exception as e:
-            title, hint = resolve_ollama_error(e, server_host)
+        except httpx.HTTPError as e:
+            title, hint = resolve_error(e, server_host)
             print("\n" + title)
             if hint:
                 print(hint)
@@ -170,11 +194,18 @@ def main():
             spinner.stop()
 
         if assistant_reply:
-            session["history"].append({"role": "assistant", "content": assistant_reply, "ts": reply_ts or now_ts()})
+            session["history"].append(
+                {
+                    "role": "assistant",
+                    "content": assistant_reply,
+                    "ts": reply_ts or now_ts(),
+                }
+            )
             session["updated_at"] = reply_ts or now_ts()
             save_session(session_id, session)
         else:
             print("No response from model.")
+
 
 if __name__ == "__main__":
     main()
