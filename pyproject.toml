@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 [project]
 name = "lemonpie-cli"
 dynamic = ["version"]
-description = "LemonPie — A lightweight Ollama client for terminal users"
+description = "LemonPie — A lightweight CLI for LLM inference servers"
 authors = [
   { name = "famousStratum", email = "info@versicode.com" }
 ]
@@ -20,7 +20,6 @@ classifiers = [
 ]
 
 dependencies = [
-  "ollama",
   "httpx",
   "platformdirs"
 ]

@@ -18,7 +18,6 @@ It is intended as a **whiteboard for brainstorming** CI/CD flows, signing, and r
 - Build `.deb` packages using `dpkg-buildpackage` or `debhelper`.
 - Host packages in a PPA or custom apt repository.
 - Automate publishing with GitHub Actions.
-- Consider dependency handling (Python, Ollama client).
 
 
 ## 🪟 Windows (winget)
@@ -31,7 +30,6 @@ It is intended as a **whiteboard for brainstorming** CI/CD flows, signing, and r
 ## 🍎 macOS (Homebrew)
 - Write a Homebrew formula pointing to GitHub releases.
 - Support `brew install lemonpie`.
-- Handle dependencies (Python, Ollama client).
 - Automate formula updates via CI/CD.
 
 
