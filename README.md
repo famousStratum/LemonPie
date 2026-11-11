@@ -115,7 +115,7 @@ models: list of objects with alias (nullable) and name
 `lmConfig --list-models`\
 `lmConfig --remove-model qwen`
 
-👉 Full [command reference](docs/usage/command-index.md).
+👉 Full [command reference](https://github.com/famousStratum/LemonPie/blob/main/docs/usage/command-index.md).
 
 ## 🗺 Roadmap
 
@@ -127,8 +127,8 @@ Planned features and improvements:
 - Cross‑platform packaging (apt, winget, Homebrew)
 - Future schema validation for config/session files
 
-👉 See the full [roadmap](docs/ROADMAP.md) for details.
+👉 See the full [roadmap](https://github.com/famousStratum/LemonPie/blob/main/docs/ROADMAP.md) for details.
 
 ## 📜 License
 
-This project is licensed under the **GNU General Public License v3.0** (**GPLv3**).You may redistribute and/or modify it under the terms of the GPL as published by the Free Software Foundation.See the [**license**](LICENSE) file for details.
+This project is licensed under the **GNU General Public License v3.0** (**GPLv3**).You may redistribute and/or modify it under the terms of the GPL as published by the Free Software Foundation.See the [**license**](https://github.com/famousStratum/LemonPie/blob/main/LICENSE) file for details.
