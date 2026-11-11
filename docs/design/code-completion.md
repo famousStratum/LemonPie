@@ -30,7 +30,7 @@ If you cannot produce code, output an empty string.
 
 **lmConfig commands:**
 - `lmConfig --set-default-autocomplete <model>` to set the default.
-- `lmConfig --add-model` and the existing state machine should verify the model is available on the Ollama server.
+- `lmConfig --add-model` and the existing state machine should verify the model is available on the server.
 
 **Behavior:** If `--model` is passed on the CLI it overrides the default; otherwise use `default_autocomplete_model`.
 

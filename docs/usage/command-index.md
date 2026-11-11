@@ -8,9 +8,9 @@ Useful for both **users** (cheat sheet) and **developers** (tracking CLI surface
 ## lmConfig
 Manage LemonPie configuration (`config.json`).
 
-- `--init` — Interactive setup wizard: prompt for server URL, verify reachability, list and select installed models, optionally set a default
+- `--init` — Interactive setup wizard: select backend, configure server URL (local default or custom), verify reachability, list and select installed models, optionally set a default
 - `--init --force` — Same as `--init` but skip server verification
-- `--host <url>` — Set Ollama host URL (`http(s)://host:port`)
+- `--host <url>` — Set server host URL (`http(s)://host:port`)
 - `--default-model <name>` — Set default model using alias or full name (must exist in models)
 - `--add-model <alias> <model>` — Add model mapping: alias → model_full_name
 - `--remove-model <identifier>` — Remove a model mapping by alias or full name

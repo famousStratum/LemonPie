@@ -8,7 +8,7 @@ It defines how LemonPie should handle server reachability, model installation, a
 ---
 
 ## 🎯 Goals
-- Ensure models are verified against the Ollama server before being added.
+- Ensure models are verified against the server before being added.
 - Provide clear user feedback for success/failure cases.
 - Support `--force` as a broad override mechanism (alias conflicts, skipping verification).
 - Keep logic predictable and extensible for future improvements.

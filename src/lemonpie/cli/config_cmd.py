@@ -4,7 +4,7 @@ config_cmd.py (alias: lmConfig) — CLI for managing LemonPie configuration.
 
 Usage examples:
   lmConfig --init                                  # Interactive setup wizard
-  lmConfig --host http://127.0.0.1:11434           # Set Ollama server URL
+  lmConfig --host http://127.0.0.1:11434           # Set server URL
   lmConfig --add-model qwen qwen2.5-coder:3b       # Map an alias to a model
   lmConfig --add-model qwen qwen2.5:1.5b --force   # Reassign an existing alias
   lmConfig --default-model qwen                    # Set default by alias or name
@@ -27,7 +27,7 @@ from lemonpie.config import (
     load_config,
     save_config,
 )
-from lemonpie.engine.models import (
+from lemonpie.models import (
     find_by_alias,
     find_by_name,
 )
@@ -36,26 +36,70 @@ from lemonpie.engine.models import (
 # lmConfig --init helpers
 # ---------------------------------------------------------------------------
 
+KNOWN_BACKENDS = [
+    {"name": "llamacpp", "label": "llama.cpp", "port": 9931},
+    {"name": "ollama", "label": "Ollama", "port": 11434},
+    {"name": "lmstudio", "label": "LM Studio", "port": 1234},
+    {"name": None, "label": "Other", "port": None},
+]
 
-def fetch_ollama_models(server):
-    """GET /api/tags and return (list_of_name_strings, error_str_or_None).
 
-    Used by cmd_init to verify server reachability and discover installed
-    models in a single round-trip.
+def _prompt_backend():
+    """Ask which backend the user is using.
+
+    Returns (backend_name, default_port). Both are None for 'Other'.
     """
-    try:
-        resp = httpx.get(f"{server.rstrip('/')}/api/tags", timeout=5.0)
-        resp.raise_for_status()
-        data = resp.json()
-        return [m["name"] for m in data.get("models", [])], None
-    except httpx.ConnectError:
-        return [], "Connection refused"
-    except httpx.TimeoutException:
-        return [], "Connection timed out"
-    except httpx.HTTPError as exc:
-        return [], f"HTTP error: {exc}"
-    except (json.JSONDecodeError, KeyError, TypeError) as exc:
-        return [], f"Invalid response format from server, {exc}"
+    print("Which backend are you using?")
+    for i, b in enumerate(KNOWN_BACKENDS, 1):
+        print(f"  {i}. {b['label']}")
+
+    while True:
+        raw = input(f"  Enter number (1-{len(KNOWN_BACKENDS)}): ").strip()
+        try:
+            idx = int(raw) - 1
+            if 0 <= idx < len(KNOWN_BACKENDS):
+                b = KNOWN_BACKENDS[idx]
+                return b["name"], b["port"]
+        except ValueError:
+            pass
+        print(f"  Invalid choice, enter 1-{len(KNOWN_BACKENDS)}.")
+
+
+def _prompt_custom_url(hint=None):
+    """Prompt for a custom server URL with an optional example hint."""
+    prompt = f"  Server URL ({hint}): " if hint else "  Server URL: "
+    while True:
+        raw = input(prompt).strip()
+        if is_valid_url(raw):
+            return raw
+        print("  Invalid URL. Must start with http:// or https://.")
+
+
+def _prompt_server(default_port):
+    """Ask if the server is local or remote, return server URL."""
+    is_local = confirm("Is your server running on this machine?")
+
+    if is_local:
+        if default_port:
+            default_url = f"http://localhost:{default_port}"
+            print(f"\n  1. Default  ({default_url})")
+            print("  2. Custom")
+            while True:
+                raw = input("  Enter number (1-2): ").strip()
+                if raw == "1":
+                    return default_url
+                if raw == "2":
+                    return _prompt_custom_url()
+                print("  Invalid choice, enter 1 or 2.")
+        else:
+            return _prompt_custom_url()
+    else:
+        hint = (
+            f"e.g. http://192.168.1.1:{default_port}"
+            if default_port
+            else "e.g. http://192.168.1.1:<port>"
+        )
+        return _prompt_custom_url(hint=hint)
 
 
 def _prompt_model_selection(available_models):
@@ -144,6 +188,32 @@ def _prompt_default(models):
 
 
 # ---------------------------------------------------------------------------
+# Server discovery
+# ---------------------------------------------------------------------------
+
+
+def fetch_available_models(server):
+    """GET /v1/models and return (list_of_name_strings, error_str_or_None).
+
+    Used by cmd_init to verify server reachability and discover installed
+    models in a single round-trip.
+    """
+    try:
+        resp = httpx.get(f"{server.rstrip('/')}/v1/models", timeout=5.0)
+        resp.raise_for_status()
+        data = resp.json()
+        return [m["id"] for m in data.get("data", [])], None
+    except httpx.ConnectError:
+        return [], "Connection refused"
+    except httpx.TimeoutException:
+        return [], "Connection timed out"
+    except httpx.HTTPError as exc:
+        return [], f"HTTP error: {exc}"
+    except (json.JSONDecodeError, KeyError, TypeError) as exc:
+        return [], f"Invalid response format from server, {exc}"
+
+
+# ---------------------------------------------------------------------------
 # lmConfig --init
 # ---------------------------------------------------------------------------
 
@@ -154,16 +224,17 @@ def cmd_init(force=False):
     Steps
     -----
     1. Warn if a config already exists; ask for confirmation to overwrite.
-    2. Prompt for the Ollama server URL (validated; loops on bad input).
-    3. Unless ``--force``, verify server reachability via ``GET /api/tags``.
+    2. Prompt for backend selection.
+    3. Prompt for server URL — local (default or custom) or remote.
+    4. Unless ``--force``, verify server reachability via ``GET /v1/models``.
        - If reachable: present the installed-model list for selection.
        - If unreachable: offer to continue without verification.
-    4. If no server models are available, offer manual model entry.
-    5. Optionally set a default model.
-    6. Save and print a summary.
+    5. If no server models are available, offer manual model entry.
+    6. Optionally set a default model.
+    7. Save and print a summary.
 
-    ``--force`` skips step 3 entirely (useful when the server is offline
-    during setup or to bypass alias-conflict checks on subsequent adds).
+    ``--force`` skips step 4 entirely (useful when the server is offline
+    during setup).
     """
     path = config_file_path()
     if os.path.exists(path):
@@ -175,18 +246,18 @@ def cmd_init(force=False):
     print("\nLemonPie setup\n")
 
     # ------------------------------------------------------------------
-    # Step 1: Server URL
+    # Step 1: Backend
     # ------------------------------------------------------------------
-    default_server = "http://127.0.0.1:11434"
-    while True:
-        raw = input(f"Ollama server URL [{default_server}]: ").strip()
-        server = raw or default_server
-        if is_valid_url(server):
-            break
-        print(f"  Invalid URL: {server!r}. Must start with http:// or https://.")
+    backend, default_port = _prompt_backend()
 
     # ------------------------------------------------------------------
-    # Step 2: Verify server & discover models
+    # Step 2: Server URL
+    # ------------------------------------------------------------------
+    print()
+    server = _prompt_server(default_port)
+
+    # ------------------------------------------------------------------
+    # Step 3: Verify server & discover models
     # ------------------------------------------------------------------
     available_models: list[str] = []
     server_ok = False
@@ -195,7 +266,7 @@ def cmd_init(force=False):
         print("  Skipping server verification (--force).")
     else:
         print(f"  Connecting to {server} ...", end="", flush=True)
-        available_models, err = fetch_ollama_models(server)
+        available_models, err = fetch_available_models(server)
         if err:
             print(f" failed.\n  {err}")
             if not confirm("  Continue without verification?"):
@@ -208,7 +279,7 @@ def cmd_init(force=False):
             print(f" OK ({label})")
 
     # ------------------------------------------------------------------
-    # Step 3: Select / add models
+    # Step 4: Select / add models
     # ------------------------------------------------------------------
     models: list[dict] = []
 
@@ -216,26 +287,29 @@ def cmd_init(force=False):
         models = _prompt_model_selection(available_models)
     else:
         if server_ok:
-            # Reachable but empty — give actionable guidance.
             print("  No models are installed on this server.")
-            print("  Run `ollama pull <model>` to install one, then")
-            print("  use `lmConfig --add-model <alias> <name>` to register it.")
-
         if confirm("  Add a model manually?"):
             models = _prompt_model_manual()
 
     # ------------------------------------------------------------------
-    # Step 4: Default model
+    # Step 5: Default model
     # ------------------------------------------------------------------
     default = _prompt_default(models)
 
     # ------------------------------------------------------------------
-    # Step 5: Save & summarise
+    # Step 6: Save & summarise
     # ------------------------------------------------------------------
-    cfg = {"server": server, "default": default, "models": models}
+    cfg = {
+        "backend": backend,
+        "server": server,
+        "api_key": None,
+        "default": default,
+        "models": models,
+    }
     save_config(cfg)
 
     print("\nConfig saved.")
+    print(f"  Backend: {backend or 'other'}")
     print(f"  Server : {server}")
     print(f"  Default: {default or '<none>'}")
     if models:
@@ -454,7 +528,7 @@ def build_parser():
         action="store_true",
         help="Interactive setup wizard: create or reinitialize config.json",
     )
-    parser.add_argument("--host", help="Set Ollama host URL (http(s)://host:port)")
+    parser.add_argument("--host", help="Set server host URL (http(s)://host:port)")
     parser.add_argument(
         "--default-model",
         help="Set default model using alias or full name (must exist in models)",

@@ -5,13 +5,15 @@ import sys
 import uuid
 from datetime import datetime
 
-from lemonpie.paths import CURRENT_FILE, SESSIONS_DIR
+from lemonpie.paths import CURRENT_FILE, SESSION_DIR
 from lemonpie.time_utils import now_ts, short_date
 
 MAX_TITLE_LEN = 50
 
+
 def session_path(session_id):
-    return os.path.join(SESSIONS_DIR, f"{session_id}.json")
+    return os.path.join(SESSION_DIR, f"{session_id}.json")
+
 
 def read_current():
     try:
@@ -21,17 +23,20 @@ def read_current():
     except FileNotFoundError:
         return None
 
+
 def write_current(session_id):
     tmp = CURRENT_FILE + ".tmp"
     with open(tmp, "w", encoding="utf-8") as f:
         f.write(session_id)
     os.replace(tmp, CURRENT_FILE)
 
+
 def clear_current():
     try:
         os.remove(CURRENT_FILE)
     except FileNotFoundError:
         pass
+
 
 def resolve_session(args, model, current_id):
     if args.new:
@@ -41,6 +46,7 @@ def resolve_session(args, model, current_id):
     if current_id:
         return load_session(current_id)
     return create_session(args.prompt, model)
+
 
 def load_session(session_id):
     try:
@@ -52,9 +58,11 @@ def load_session(session_id):
                 s["created_at"] = s["history"][0].get("ts")
             else:
                 # fallback to file mtime
-                s["created_at"] = datetime.fromtimestamp(
-                    os.path.getmtime(session_path(session_id))
-                ).astimezone().isoformat()
+                s["created_at"] = (
+                    datetime.fromtimestamp(os.path.getmtime(session_path(session_id)))
+                    .astimezone()
+                    .isoformat()
+                )
         if "updated_at" not in s or not s.get("updated_at"):
             if s.get("history"):
                 s["updated_at"] = s["history"][-1].get("ts")
@@ -62,13 +70,21 @@ def load_session(session_id):
                 s["updated_at"] = s["created_at"]
         return s
     except FileNotFoundError:
-        return {"id": session_id, "title": None, "history": [], "created_at": None, "updated_at": None}
+        return {
+            "id": session_id,
+            "title": None,
+            "history": [],
+            "created_at": None,
+            "updated_at": None,
+        }
+
 
 def save_session(session_id, session):
     tmp = session_path(session_id) + ".tmp"
     with open(tmp, "w", encoding="utf-8") as f:
         json.dump(session, f, indent=2)
     os.replace(tmp, session_path(session_id))
+
 
 def delete_session(session_id):
     try:
@@ -77,12 +93,13 @@ def delete_session(session_id):
     except FileNotFoundError:
         return False
 
+
 def delete_all_sessions():
-    """Deletes all session files in SESSIONS_DIR and clears current session marker."""
+    """Deletes all session files in SESSION_DIR and clears current session marker."""
     deleted_count = 0
 
-    if os.path.exists(SESSIONS_DIR):
-        for filepath in glob.glob(os.path.join(SESSIONS_DIR, "*.json")):
+    if os.path.exists(SESSION_DIR):
+        for filepath in glob.glob(os.path.join(SESSION_DIR, "*.json")):
             try:
                 os.remove(filepath)
                 deleted_count += 1
@@ -92,8 +109,14 @@ def delete_all_sessions():
     clear_current()
     return deleted_count
 
+
 def default_title(prompt):
-    return prompt if len(prompt) <= MAX_TITLE_LEN else prompt[:MAX_TITLE_LEN].rstrip() + "…"
+    return (
+        prompt
+        if len(prompt) <= MAX_TITLE_LEN
+        else prompt[:MAX_TITLE_LEN].rstrip() + "…"
+    )
+
 
 def set_title(session, new_title):
     if len(new_title) > MAX_TITLE_LEN:
@@ -103,15 +126,24 @@ def set_title(session, new_title):
     save_session(session["id"], session)
     return True
 
+
 def create_session(prompt, model, title=None):
     session_id = datetime.now().strftime("%Y%m%d-%H%M%S") + "-" + uuid.uuid4().hex[:6]
     if title is None:
         title = default_title(" ".join(prompt)) if prompt else "<no title>"
     ts = now_ts()
-    session = {"id": session_id, "model": model, "title": title, "history": [], "created_at": ts, "updated_at": ts}
+    session = {
+        "id": session_id,
+        "model": model,
+        "title": title,
+        "history": [],
+        "created_at": ts,
+        "updated_at": ts,
+    }
     save_session(session_id, session)
     write_current(session_id)
     return session
+
 
 def load_session_by_id(session_id, model=None):
     """Load a session by ID and set it as current."""
@@ -121,9 +153,10 @@ def load_session_by_id(session_id, model=None):
     write_current(session_id)
     return session
 
+
 def delete_session_by_id(session_id):
     """Delete a session after user confirmation."""
-    confirm = input(f'Delete session {session_id}? (Y/n): ')
+    confirm = input(f"Delete session {session_id}? (Y/n): ")
     if confirm.lower() in ("y", "yes", ""):
         if delete_session(session_id):
             print(f"Deleted session {session_id}")
@@ -134,15 +167,19 @@ def delete_session_by_id(session_id):
     else:
         print("Aborted deletion.")
 
+
 def close_session():
     """Close the current session pointer."""
     clear_current()
     print("Current session closed.")
 
+
 def update_title(session, model, new_title, prompt=None):
     """Update or create a session with a new title."""
     if not session:
-        confirm = input(f'No current session. Create a new session with title "{new_title}"? (Y/n): ')
+        confirm = input(
+            f'No current session. Create a new session with title "{new_title}"? (Y/n): '
+        )
         if confirm.lower() in ("y", "yes", ""):
             session = create_session(prompt or [], model, title=new_title)
             print(f'Created new session {session["id"]} with title "{new_title}".')
@@ -159,21 +196,30 @@ def update_title(session, model, new_title, prompt=None):
 
     return session
 
+
 def list_sessions():
     sessions = []
     current = read_current()
-    for fname in os.listdir(SESSIONS_DIR):
+    for fname in os.listdir(SESSION_DIR):
         if not fname.endswith(".json"):
-          continue
+            continue
         try:
-            with open(os.path.join(SESSIONS_DIR, fname), encoding="utf-8") as f:
+            with open(os.path.join(SESSION_DIR, fname), encoding="utf-8") as f:
                 data = json.load(f)
             if "id" in data:
                 created = short_date(data.get("created_at"))
                 updated = short_date(data.get("updated_at"))
                 is_current = "*" if data["id"] == current else " "
-                sessions.append((data["id"], data.get("title") or "<no title>", created, updated, is_current))
-        except Exception:
-            # skip invalid JSON files
+                sessions.append(
+                    (
+                        data["id"],
+                        data.get("title") or "<no title>",
+                        created,
+                        updated,
+                        is_current,
+                    )
+                )
+        except json.JSONDecodeError:
+            print(f"Warning: skipping {fname} — invalid JSON", file=sys.stderr)
             continue
     return sessions

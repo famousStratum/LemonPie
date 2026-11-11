@@ -8,7 +8,7 @@ from lemonpie.sessions.storage import list_sessions
 CONNECTING_MSGS = [
     "Connecting",
     "Squeezing the lemons",
-    "Knocking on Ollama’s door",
+    "Knocking on Host’s door",
 ]
 
 WAITING_MSGS = [

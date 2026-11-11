@@ -13,6 +13,7 @@ from lemonpie.sessions import storage
 # create_session / default_title
 # ---------------------------------------------------------------------------
 
+
 def test_create_session_writes_file_and_sets_current(isolated_dirs):
     session = storage.create_session(["hello", "world"], "qwen2.5-coder:3b")
 
@@ -21,7 +22,7 @@ def test_create_session_writes_file_and_sets_current(isolated_dirs):
     assert session["history"] == []
     assert session["created_at"] == session["updated_at"]
 
-    saved_path = isolated_dirs["sessions_dir"] / f"{session['id']}.json"
+    saved_path = isolated_dirs["session_dir"] / f"{session['id']}.json"
     assert saved_path.exists()
     on_disk = json.loads(saved_path.read_text(encoding="utf-8"))
     assert on_disk["id"] == session["id"]
@@ -48,6 +49,7 @@ def test_default_title_leaves_short_prompts_untouched(isolated_dirs):
 # ---------------------------------------------------------------------------
 # save_session / load_session
 # ---------------------------------------------------------------------------
+
 
 def test_save_and_load_session_round_trip(isolated_dirs):
     session = storage.create_session(["ping"], "qwen")
@@ -82,10 +84,14 @@ def test_load_session_backfills_missing_timestamps_from_history(isolated_dirs):
         "title": "old session",
         "history": [
             {"role": "user", "content": "hi", "ts": "2026-01-01T00:00:00+00:00"},
-            {"role": "assistant", "content": "hello", "ts": "2026-01-01T00:00:05+00:00"},
+            {
+                "role": "assistant",
+                "content": "hello",
+                "ts": "2026-01-01T00:00:05+00:00",
+            },
         ],
     }
-    (isolated_dirs["sessions_dir"] / f"{session_id}.json").write_text(
+    (isolated_dirs["session_dir"] / f"{session_id}.json").write_text(
         json.dumps(raw), encoding="utf-8"
     )
 
@@ -97,7 +103,7 @@ def test_load_session_backfills_missing_timestamps_from_history(isolated_dirs):
 def test_load_session_backfills_from_mtime_when_history_empty(isolated_dirs):
     session_id = "20260101-000001"
     raw = {"id": session_id, "model": "qwen", "title": "empty", "history": []}
-    (isolated_dirs["sessions_dir"] / f"{session_id}.json").write_text(
+    (isolated_dirs["session_dir"] / f"{session_id}.json").write_text(
         json.dumps(raw), encoding="utf-8"
     )
 
@@ -110,10 +116,11 @@ def test_load_session_backfills_from_mtime_when_history_empty(isolated_dirs):
 # delete_session / delete_all_sessions
 # ---------------------------------------------------------------------------
 
+
 def test_delete_session_removes_file_and_reports_result(isolated_dirs):
     session = storage.create_session(["bye"], "qwen")
     assert storage.delete_session(session["id"]) is True
-    assert not (isolated_dirs["sessions_dir"] / f"{session['id']}.json").exists()
+    assert not (isolated_dirs["session_dir"] / f"{session['id']}.json").exists()
     assert storage.delete_session(session["id"]) is False  # already gone
 
 
@@ -131,17 +138,20 @@ def test_delete_all_sessions_clears_dir_and_current(isolated_dirs):
 
     assert count == 2
     assert storage.read_current() is None
-    assert list(isolated_dirs["sessions_dir"].glob("*.json")) == []
+    assert list(isolated_dirs["session_dir"].glob("*.json")) == []
 
 
 # ---------------------------------------------------------------------------
 # list_sessions
 # ---------------------------------------------------------------------------
 
+
 def test_list_sessions_marks_current_and_ignores_non_json(isolated_dirs):
     s1 = storage.create_session(["first"], "qwen")
     s2 = storage.create_session(["second"], "qwen")  # becomes current
-    (isolated_dirs["sessions_dir"] / "notes.txt").write_text("ignore me", encoding="utf-8")
+    (isolated_dirs["session_dir"] / "notes.txt").write_text(
+        "ignore me", encoding="utf-8"
+    )
 
     sessions = storage.list_sessions()
     ids = {row[0] for row in sessions}
@@ -154,7 +164,7 @@ def test_list_sessions_marks_current_and_ignores_non_json(isolated_dirs):
 
 def test_list_sessions_skips_invalid_json_without_crashing(isolated_dirs):
     storage.create_session(["ok"], "qwen")
-    (isolated_dirs["sessions_dir"] / "corrupt.json").write_text(
+    (isolated_dirs["session_dir"] / "corrupt.json").write_text(
         "{not valid json", encoding="utf-8"
     )
 
@@ -165,6 +175,7 @@ def test_list_sessions_skips_invalid_json_without_crashing(isolated_dirs):
 # ---------------------------------------------------------------------------
 # current-session pointer
 # ---------------------------------------------------------------------------
+
 
 def test_write_read_clear_current(isolated_dirs):
     assert storage.read_current() is None
@@ -183,6 +194,7 @@ def test_close_session_clears_current(isolated_dirs):
 # ---------------------------------------------------------------------------
 # set_title
 # ---------------------------------------------------------------------------
+
 
 def test_set_title_rejects_overlong_title(isolated_dirs):
     session = storage.create_session(["hi"], "qwen")
@@ -203,6 +215,7 @@ def test_set_title_updates_and_persists(isolated_dirs):
 # resolve_session
 # ---------------------------------------------------------------------------
 
+
 class DummyArgs:
     """Minimal stand-in for the argparse.Namespace fields resolve_session reads."""
 
@@ -218,7 +231,9 @@ def test_resolve_session_new_flag_creates_session(isolated_dirs):
     assert session["title"] == "fresh start"
 
 
-def test_resolve_session_with_explicit_session_id_applies_model_and_sets_current(isolated_dirs):
+def test_resolve_session_with_explicit_session_id_applies_model_and_sets_current(
+    isolated_dirs,
+):
     existing = storage.create_session(["first"], "qwen")
     storage.clear_current()
 
@@ -247,18 +262,19 @@ def test_resolve_session_creates_when_nothing_else_applies(isolated_dirs):
 # functions that call input() / sys.exit()
 # ---------------------------------------------------------------------------
 
+
 def test_delete_session_by_id_confirmed_removes_file(isolated_dirs, monkeypatch):
     session = storage.create_session(["gone soon"], "qwen")
     monkeypatch.setattr("builtins.input", lambda _: "y")
     storage.delete_session_by_id(session["id"])
-    assert not (isolated_dirs["sessions_dir"] / f"{session['id']}.json").exists()
+    assert not (isolated_dirs["session_dir"] / f"{session['id']}.json").exists()
 
 
 def test_delete_session_by_id_aborted_keeps_file(isolated_dirs, monkeypatch):
     session = storage.create_session(["stay"], "qwen")
     monkeypatch.setattr("builtins.input", lambda _: "n")
     storage.delete_session_by_id(session["id"])
-    assert (isolated_dirs["sessions_dir"] / f"{session['id']}.json").exists()
+    assert (isolated_dirs["session_dir"] / f"{session['id']}.json").exists()
 
 
 def test_update_title_on_existing_session_without_prompt_exits_zero(isolated_dirs):
