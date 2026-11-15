@@ -17,6 +17,7 @@ Quick usage
 See README.md for details and maintainer notes.
 """
 
+import json
 import sys
 
 import httpx
@@ -30,6 +31,7 @@ from lemonpie.cli.ui import (
 )
 from lemonpie.client import (
     build_client,
+    build_payload,
     resolve_error,
     stream_chat,
 )
@@ -73,6 +75,18 @@ def main():
 
     # Direct CLI actions
 
+    # dry_run intercept: show what would happen, don't perform any action
+    if args.dry_run:
+        if args.delete:
+            print(f"Would delete session {args.delete}.")
+            sys.exit(0)
+        if args.delete_all:
+            print("Would delete all sessions.")
+            sys.exit(0)
+        if args.close:
+            print("Would close the current session.")
+            sys.exit(0)
+
     if args.list:
         print_sessions_list()
         sys.exit(0)
@@ -114,6 +128,36 @@ def main():
         print("Use lmConfig to add one or pass a known alias with -m.")
         sys.exit(1)
 
+    # --- dry_run: build and print payload without writing anything ---
+    if args.dry_run:
+        # Explicit session override takes precedence over current session pointer
+        if args.session:
+            session = load_session(args.session)
+            history = session.get("history", []) if session else []
+        elif current_id:
+            session = load_session(current_id)
+            history = session.get("history", []) if session else []
+        else:
+            history = []
+
+        # Build messages: session history + prompt
+        payload_messages = [
+            {"role": m["role"], "content": m["content"]} for m in history
+        ]
+        if args.prompt:
+            payload_messages.append(
+                {"role": "user", "content": " ".join(args.prompt)}
+            )
+
+        if not payload_messages:
+            print("No messages to send. Provide a prompt or load a session.")
+            sys.exit(0)
+
+        payload = build_payload(model, payload_messages)
+        print("=== Dry Run: HTTP Payload ===")
+        print(json.dumps(payload, indent=2))
+        sys.exit(0)
+
     if (
         model_flag
         and not current_id
@@ -147,12 +191,18 @@ def main():
             {"role": "user", "content": user_prompt, "ts": turn_ts}
         )
         session["updated_at"] = turn_ts
+
+        payload = build_payload(model, session["history"])
         save_session(session_id, session)
 
         if not find_by_name(cfg, model):
             print(
                 f'Configured models do not include "{model}". Use lmConfig to add it or pass a known alias.'
             )
+            sys.exit(1)
+
+        if not server_host:
+            print("No server configured. Run `lmConfig --init` to get started.")
             sys.exit(1)
 
         spinner = StatusSpinner(CONNECTING_MSGS)
@@ -162,11 +212,7 @@ def main():
         reply_ts = None
         first_chunk_seen = False
 
-        if not server_host:
-            print("No server configured. Run `lmConfig --init` to get started.")
-            sys.exit(1)
-
-        chunks = stream_chat(client, model, session["history"])
+        chunks = stream_chat(client, payload)
 
         try:
             for content in chunks:

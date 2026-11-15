@@ -18,5 +18,6 @@ def build_parser():
     parser.add_argument("-c", "--close", action="store_true", help="Close current session")
     parser.add_argument("-p", "--print", action="store_true", help="Print current session history")
     parser.add_argument("--delete-all", action="store_true", help="Delete all stored sessions")
+    parser.add_argument("--dry-run", action="store_true", help="Show what would happen without sending requests or modifying any data")
     parser.add_argument("prompt", nargs="*", help="Prompt text")
     return parser
