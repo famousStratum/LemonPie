@@ -12,17 +12,22 @@ def build_client(server_host, timeout, api_key=None):
     return httpx.Client(base_url=server_host, timeout=timeout, headers=headers)
 
 
-def stream_chat(client, model, messages):
+def build_payload(model, messages, stream=True, **extra_params):
+    """Build the JSON payload for /v1/chat/completions."""
+    payload = {
+        "model": model,
+        "messages": [{"role": m["role"], "content": m["content"]} for m in messages],
+        "stream": stream,
+    }
+    payload.update(extra_params)
+    return payload
+
+
+def stream_chat(client, payload):
     """
     Stream a chat completion from an OpenAI-compatible endpoint,
     yielding text content chunks.
     """
-    payload = {
-        "model": model,
-        "messages": [{"role": m["role"], "content": m["content"]} for m in messages],
-        "stream": True,
-    }
-
     with client.stream("POST", "/v1/chat/completions", json=payload) as response:
         response.raise_for_status()
         for line in response.iter_lines():
