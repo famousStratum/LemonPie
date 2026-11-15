@@ -111,7 +111,7 @@ Override the config file location from the CLI. Useful for testing, temporary ov
 
 Print the HTTP payload (`/v1/chat/completions` body) without sending it. Debugging tool for verifying prompts, system prompts, and message history.
 
-**Status:** Not implemented.
+**Status:** Implemented.
 
 ### 9. Config Migration Warnings
 

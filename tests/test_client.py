@@ -5,9 +5,8 @@ from contextlib import contextmanager
 from unittest.mock import MagicMock, patch
 
 import httpx
-import pytest
 
-from lemonpie.client import build_client, resolve_error, stream_chat
+from lemonpie.client import build_client, build_payload, resolve_error, stream_chat
 
 SERVER = "http://localhost:9931"
 
@@ -16,11 +15,11 @@ SERVER = "http://localhost:9931"
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 def _make_sse_lines(chunks):
     """Build an SSE line list from a list of content strings."""
     lines = [
-        f'data: {json.dumps({"choices": [{"delta": {"content": c}}]})}'
-        for c in chunks
+        f"data: {json.dumps({'choices': [{'delta': {'content': c}}]})}" for c in chunks
     ]
     lines.append("data: [DONE]")
     return lines
@@ -42,6 +41,7 @@ def _mock_stream(lines):
 # ---------------------------------------------------------------------------
 # build_client
 # ---------------------------------------------------------------------------
+
 
 class TestBuildClient:
     def test_returns_httpx_client(self):
@@ -65,6 +65,7 @@ class TestBuildClient:
 # stream_chat
 # ---------------------------------------------------------------------------
 
+
 class TestStreamChat:
     def _client(self):
         return httpx.Client(base_url=SERVER)
@@ -72,8 +73,13 @@ class TestStreamChat:
     def test_yields_content_chunks(self):
         client = self._client()
         messages = [{"role": "user", "content": "hi"}]
-        with patch.object(client, "stream", new=_mock_stream(_make_sse_lines(["Hello", ", ", "world"]))):
-            result = list(stream_chat(client, "qwen", messages))
+        payload = build_payload("qwen", messages)
+        with patch.object(
+            client,
+            "stream",
+            new=_mock_stream(_make_sse_lines(["Hello", ", ", "world"])),
+        ):
+            result = list(stream_chat(client, payload))
         assert result == ["Hello", ", ", "world"]
 
     def test_strips_ts_from_messages(self):
@@ -91,7 +97,7 @@ class TestStreamChat:
             yield mock_response
 
         with patch.object(client, "stream", new=capturing_stream):
-            list(stream_chat(client, "qwen", messages))
+            list(stream_chat(client, build_payload("qwen", messages)))
 
         sent = captured["json"]["messages"]
         assert sent == [{"role": "user", "content": "hi"}]
@@ -99,6 +105,7 @@ class TestStreamChat:
     def test_skips_empty_content(self):
         client = self._client()
         messages = [{"role": "user", "content": "hi"}]
+        payload = build_payload("qwen", messages)
         lines = [
             'data: {"choices": [{"delta": {"content": ""}}]}',
             'data: {"choices": [{"delta": {}}]}',
@@ -106,24 +113,26 @@ class TestStreamChat:
             "data: [DONE]",
         ]
         with patch.object(client, "stream", new=_mock_stream(lines)):
-            result = list(stream_chat(client, "qwen", messages))
+            result = list(stream_chat(client, payload))
         assert result == ["real"]
 
     def test_stops_at_done_sentinel(self):
         client = self._client()
         messages = [{"role": "user", "content": "hi"}]
+        payload = build_payload("qwen", messages)
         lines = [
             'data: {"choices": [{"delta": {"content": "before"}}]}',
             "data: [DONE]",
             'data: {"choices": [{"delta": {"content": "after"}}]}',
         ]
         with patch.object(client, "stream", new=_mock_stream(lines)):
-            result = list(stream_chat(client, "qwen", messages))
+            result = list(stream_chat(client, payload))
         assert result == ["before"]
 
     def test_skips_non_data_lines(self):
         client = self._client()
         messages = [{"role": "user", "content": "hi"}]
+        payload = build_payload("qwen", messages)
         lines = [
             ": keep-alive",
             "",
@@ -131,25 +140,27 @@ class TestStreamChat:
             "data: [DONE]",
         ]
         with patch.object(client, "stream", new=_mock_stream(lines)):
-            result = list(stream_chat(client, "qwen", messages))
+            result = list(stream_chat(client, payload))
         assert result == ["hi"]
 
     def test_skips_malformed_json(self):
         client = self._client()
         messages = [{"role": "user", "content": "hi"}]
+        payload = build_payload("qwen", messages)
         lines = [
             "data: {not valid json",
             'data: {"choices": [{"delta": {"content": "ok"}}]}',
             "data: [DONE]",
         ]
         with patch.object(client, "stream", new=_mock_stream(lines)):
-            result = list(stream_chat(client, "qwen", messages))
+            result = list(stream_chat(client, payload))
         assert result == ["ok"]
 
 
 # ---------------------------------------------------------------------------
 # resolve_error
 # ---------------------------------------------------------------------------
+
 
 class TestResolveError:
     def test_connect_timeout(self):

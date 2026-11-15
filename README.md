@@ -104,6 +104,9 @@ models: list of objects with alias (nullable) and name
 - Print current session history\
 `lm -p`
 
+- Show what would happen without sending requests or modifying any data (dry run)\
+`lm --dry-run -n "Hello"`
+
 - Switch model in current session\
 `lm -m qwen2.5-coder:3b`
 

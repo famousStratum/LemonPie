@@ -33,11 +33,13 @@ Run LemonPie with a given model or prompt.
 - `-c, --close` — Close current session
 - `-p, --print` — Print current session history
 - `--delete-all` — Delete all stored sessions
+- `--dry-run` — Print the HTTP payload without sending it (debugging tool)
 - `prompt` — Prompt text (positional argument)
 
 ---
 
 ## Notes
+- `--dry-run` prints the full JSON payload to `/v1/chat/completions` and exits (exit code 0)
 - Flags can be combined with prompts, e.g.:
 `lm -m smollm:360m -n "Hello world"`
 - `--force` applies to `lmConfig --add-model` (overwrite alias conflicts) and `lmConfig --init` (skip server verification).

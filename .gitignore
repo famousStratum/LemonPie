@@ -23,6 +23,7 @@ src/lemonpie/_version.py
 .vscode/
 .idea/
 *.swp
+.pi/
 
 # OS temporary files
 .DS_Store
