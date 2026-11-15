@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.3.1](https://github.com/famousStratum/LemonPie/compare/v0.3.0...v0.3.1) (2026-11-15)
+
+
+### Features
+
+* add --dry-run flag for previewing actions ([b432c2e](https://github.com/famousStratum/LemonPie/commit/b432c2e115c323af9ee13c13da560891873328ba))
+* add --dry-run flag to preview actions without executing them ([dab6f25](https://github.com/famousStratum/LemonPie/commit/dab6f2527f753375d1489d51610aef743980051f))
+
+
+### Documentation
+
+* create a doc for feature ideas ([#45](https://github.com/famousStratum/LemonPie/issues/45)) ([9e83b95](https://github.com/famousStratum/LemonPie/commit/9e83b95456b6657f17b1d3442cf1c984049671a7))
+* update README description and --dry-run status ([999159f](https://github.com/famousStratum/LemonPie/commit/999159f9782039d4049e448121ccbae4538ea779))
+
 ## [0.3.0](https://github.com/famousStratum/LemonPie/compare/v0.2.0...v0.3.0) (2026-11-11)
 
 
