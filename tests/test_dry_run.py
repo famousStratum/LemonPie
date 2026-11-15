@@ -8,6 +8,12 @@ import pytest
 from lemonpie.main import main
 
 
+@pytest.fixture(autouse=True)
+def mock_argv():
+    with patch("sys.argv", ["lm", "--dry-run"]):
+        yield
+
+
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
