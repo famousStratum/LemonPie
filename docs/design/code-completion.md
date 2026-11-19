@@ -1,40 +1,46 @@
+# Code Completion
+
 **Status:** Draft
 
-### Implementation plan (high level)
-
-#### Goal
-**Native CLI code completion** that behaves like an IDE autocomplete but works from the LemonPie CLI:  
-`lm -n "<prefix>" --autocomplete` or an interactive REPL mode.  
-The system must be able to **force the model to return only code** when autocomplete is selected and let users set a default autocomplete model via `lmConfig`.
+Native CLI code completion that behaves like an IDE autocomplete but works from the terminal:
+`lm -n "<prefix>" --autocomplete` for one-shot mode, or `lm --repl --autocomplete` for interactive.
+The system must force the model to return only code when autocomplete is selected, and let users
+set a default autocomplete model via `lmConfig`.
 
 ---
 
-#### Prompt and role enforcement
-- **Define an autocomplete role** in config (system instruction) that explicitly instructs the model to output only code and no explanations.
+## Prompt and role enforcement
 
-**Example system instruction (store in config roles):**
-```    
+Define an **autocomplete role** in config — a system instruction that explicitly constrains
+the model to output only code and no explanations.
+
+**Example system instruction (stored in config roles):**
+
+```
 You are a code autocomplete engine.
 Only output valid code tokens that continue the given prefix.
 Do not include explanations, commentary, or markdown.
 If you cannot produce code, output an empty string.
 ```
 
-
-- When `--autocomplete` is used, LemonPie selects this role automatically and sends it as the system message so the model is constrained.
+When `--autocomplete` is used, LemonPie selects this role automatically and sends it as the
+system message.
 
 ---
 
-#### Model selection and config
-- **Add a `default_autocomplete_model`** field to `config.json` or `config.yaml`.
+## Model selection and config
+
+Add a `default_autocomplete_model` field to `config.json`.
 
 **lmConfig commands:**
-- `lmConfig --set-default-autocomplete <model>` to set the default.
-- `lmConfig --add-model` and the existing state machine should verify the model is available on the server.
+- `lmConfig --set-default-autocomplete <model>` — set the default autocomplete model.
+- `lmConfig --add-model` and the existing state machine verify the model is available on the server.
 
-**Behavior:** If `--model` is passed on the CLI it overrides the default; otherwise use `default_autocomplete_model`.
+**Behaviour:** If `--model` is passed on the CLI it overrides the default; otherwise
+`default_autocomplete_model` is used.
 
-**Example config snippet**
+**Config snippet:**
+
 ```json
 {
   "default_autocomplete_model": "smollm:360m",
@@ -46,63 +52,107 @@ If you cannot produce code, output an empty string.
 }
 ```
 
-#### CLI UX and examples
-- **One-shot completion**
+---
 
-    lm -n "def build_client(server_host, timeout):\n    return " --autocomplete
+## CLI UX
 
-  Output: code continuation only.
+**One-shot completion:**
 
-- **REPL mode**
+```bash
+lm -n "def build_client(server_host, timeout):\n    return " --autocomplete
+```
 
-    lm --repl --autocomplete
+Output: code continuation only.
 
-  Press Enter to request completion for the current line or selection.
+**REPL mode:**
 
-- **Flags**
-  - `--autocomplete` selects role and output filtering.
-  - `--model <name>` overrides default autocomplete model.
-  - `--stream` enables token streaming for low-latency incremental display.
+```bash
+lm --repl --autocomplete
+```
 
-#### Output filtering and validation
-- **Primary enforcement**: rely on the system role to make the model return code-only.
-- **Secondary enforcement**: post-process model output:
-  - **Syntactic sanity checks**: quick heuristics (starts with `def`, `class`, `{`, `[` or valid indentation for Python).
-  - **Strip leading natural language**: if output begins with non-code tokens, discard or retry.
-  - **Retry policy**: up to N retries with a stricter system prompt or different temperature.
-- **Fail-safe**: if model repeatedly returns non-code, return an empty completion and a short machine-readable error code (not a human explanation) so callers can handle it.
+Press Enter to request completion for the current line or selection.
 
-#### Streaming, latency, and model sizing
-- **Tradeoffs**:
-  - **Small models**: low latency, good for interactive typing; may be less accurate.
-  - **Large models**: better completions, higher latency.
+**Flags:**
 
-- **Suggested defaults**:
-  - Use a small/medium autocomplete model for interactive mode (e.g., `smollm:360m`).
-  - Allow power users to set a larger model for batch completions.
+| Flag | Description |
+|---|---|
+| `--autocomplete` | Select autocomplete role and enable output filtering |
+| `--model <name>` | Override default autocomplete model for this invocation |
+| `--stream` | Token streaming for low-latency incremental display |
 
-**Table of tradeoffs**
+---
 
-| **Model Class** | **Latency** | **Accuracy** | **Use Case** |
-|-----------------|-------------|--------------|--------------|
-| Small (<=500M)  | Low         | Medium       | Interactive REPL, quick suggestions |
-| Medium (500M–3B)| Medium      | Good         | Most users, balanced |
-| Large (>3B)     | High        | High         | Offline batch completions, complex code |
+## Output filtering and validation
 
-#### State machine and retries
-- Reuse the state-machine style from [model-verification.md](docs/design/model-verification.md) and add a small state machine for completion requests:
-  - **Start** → model reachable? → yes: send request; no: fallback to local cache or error.
-  - **Receive output** → passes code filter? → yes: return; no: retry with stricter prompt or different model → if still fail, return empty completion with error code.
-- Document retry limits and backoff in `code-completion.md`.
+- **Primary enforcement** — the system role constrains the model to code-only output.
+- **Secondary enforcement** — post-process the model output:
+  - Syntactic sanity checks (output starts with `def`, `class`, `{`, `[`, or valid indentation).
+  - Strip leading natural language; if output begins with non-code tokens, discard or retry.
+  - Retry policy: up to N retries with a stricter system prompt or adjusted temperature.
+- **Fail-safe** — if the model repeatedly returns non-code, return an empty completion and a
+  machine-readable error code (not a human explanation) so callers can handle it gracefully.
 
-#### Testing and rollout
-- **Unit tests** for:
-  - Role selection when `--autocomplete` is used.
-  - Output filtering heuristics.
-  - `lmConfig` default model setting and verification.
+---
 
-- **Integration tests**:
-  - Simulate streaming completions.
-  - Measure latency and retry behavior.
+## Streaming, latency, and model sizing
 
-- **Beta flag**: ship behind `--experimental-autocomplete` initially to gather feedback.
+| Model class | Latency | Accuracy | Use case |
+|---|---|---|---|
+| Small (≤500M) | Low | Medium | Interactive REPL, quick suggestions |
+| Medium (500M–3B) | Medium | Good | Most users, balanced |
+| Large (>3B) | High | High | Offline batch, complex code |
+
+**Suggested defaults:**
+- Small model for interactive mode (e.g. `smollm:360m`).
+- Allow users to configure a larger model for batch completions.
+
+---
+
+## State machine and retries
+
+Reuses the state-machine approach from [model-verification.md](model-verification.md).
+Adds a small state machine for completion requests:
+
+```text
+Send completion request
+         │
+         ▼
+   model reachable?
+    /           \
+  NO            YES
+   │              │
+fallback /      receive output
+  error            │
+                   ▼
+            passes code filter?
+             /           \
+           YES             NO
+            │               │
+          return        retry (stricter prompt)
+                              │
+                         still failing?
+                          /        \
+                        YES         NO
+                         │           │
+                  return empty     return output
+                  completion +
+                  error code
+```
+
+Retry limits and backoff to be documented during implementation.
+
+---
+
+## Testing and rollout
+
+**Unit tests:**
+- Role selection when `--autocomplete` is active.
+- Output filtering heuristics.
+- `lmConfig --set-default-autocomplete` and model verification.
+
+**Integration tests:**
+- Simulate streaming completions.
+- Measure latency and retry behaviour under load.
+
+**Rollout:** Ship behind `--experimental-autocomplete` initially to gather feedback,
+then promote once stable.
