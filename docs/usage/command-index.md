@@ -1,11 +1,12 @@
 # 📖 Command & Flag Index
 
-Quick reference for LemonPie CLI commands and flags.  
+Quick reference for LemonPie CLI commands and flags.
 Useful for both **users** (cheat sheet) and **developers** (tracking CLI surface area).
 
 ---
 
 ## lmConfig
+
 Manage LemonPie configuration (`config.json`).
 
 - `--init` — Interactive setup wizard: select backend, configure server URL (local default or custom), verify reachability, list and select installed models, optionally set a default
@@ -21,7 +22,8 @@ Manage LemonPie configuration (`config.json`).
 ---
 
 ## lm
-Run LemonPie with a given model or prompt.
+
+Start and manage chat sessions.
 
 - `-v, --version` — Show version
 - `-m, --model <name>` — Model alias or full name
@@ -39,8 +41,13 @@ Run LemonPie with a given model or prompt.
 ---
 
 ## Notes
-- `--dry-run` prints the full JSON payload to `/v1/chat/completions` and exits (exit code 0)
-- Flags can be combined with prompts, e.g.:
-`lm -m smollm:360m -n "Hello world"`
+
+- `--dry-run` prints the full JSON payload to `/v1/chat/completions` and exits with code 0.
+- Flags can be combined with prompts:
+
+  ```bash
+  lm -m smollm:360m -n "Hello world"
+  ```
+
 - `--force` applies to `lmConfig --add-model` (overwrite alias conflicts) and `lmConfig --init` (skip server verification).
 - Future flags will be added here as they are introduced.
