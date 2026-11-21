@@ -2,20 +2,21 @@
 
 **Status:** Ready
 
-This document outlines the planned state machine for `lmConfig --add-model`.  
-It defines how LemonPie should handle server reachability, model installation, and user choices when adding models.
+This document outlines the state machine for `lmConfig --add-model`.
+It defines how LemonPie handles server reachability, model installation, and user choices when adding models.
 
 ---
 
-## 🎯 Goals
+## Goals
+
 - Ensure models are verified against the server before being added.
 - Provide clear user feedback for success/failure cases.
-- Support `--force` as a broad override mechanism (alias conflicts, skipping verification).
-- Keep logic predictable and extensible for future improvements.
+- Support `--force` as a broad override mechanism.
+- Keep logic predictable and extensible.
 
 ---
 
-## 🔄 State Machine Flow
+## State machine
 
 ```text
 lmConfig --add-model sm smollm:360m
@@ -47,3 +48,17 @@ lmConfig --add-model sm smollm:360m
       ▼
    abort
    "use --force to add without verification"
+```
+
+---
+
+## --force override
+
+`--force` is a broad override that bypasses verification steps:
+
+- Skip server reachability check.
+- Skip model installation check.
+- Overwrite existing alias conflicts without prompting.
+
+Use `--force` when the server is temporarily unreachable, the model is known to be installed,
+or an alias conflict needs to be resolved non-interactively.
