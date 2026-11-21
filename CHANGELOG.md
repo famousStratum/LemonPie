@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.2](https://github.com/famousStratum/LemonPie/compare/v0.3.1...v0.3.2) (2026-11-21)
+
+
+### Documentation
+
+* add agent knowledge base and clean up source docs ([#50](https://github.com/famousStratum/LemonPie/issues/50)) ([2269737](https://github.com/famousStratum/LemonPie/commit/2269737828adc2ada9142c1e0386feac862c95ad))
+
 ## [0.3.1](https://github.com/famousStratum/LemonPie/compare/v0.3.0...v0.3.1) (2026-11-15)
 
 
