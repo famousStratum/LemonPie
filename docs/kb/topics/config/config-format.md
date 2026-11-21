@@ -3,8 +3,8 @@ id: 20261117-config-format
 title: Config file format
 tags: [config]
 created: 2026-11-17
-updated: 2026-11-17
-related: [20261117-config-paths, 20261117-cli-commands, 20261117-ollama-client]
+updated: 2026-11-20
+related: [20261117-config-paths, 20261117-cli-commands, 20261117-http-client]
 summary: JSON schema for lemonpie's config file — backend, server URL, API key, default model, and model alias list.
 ---
 
@@ -44,7 +44,7 @@ on first use. `docs/config.example.json` in the repo is a reference template.
 
 - `default` must be the **full** model identifier (e.g. `qwen2.5-coder:3b`), not an alias.
 - `alias` is optional — set to `null` to register a model without a shorthand.
-- Aliases are resolved by `engine/models.py` before any API call.
+- Aliases are resolved by `models.py` before any API call.
 - Writes use atomic tmp-then-replace for safety.
 - `lmConfig --init` guides through backend selection, server setup, and model listing interactively.
 
@@ -52,4 +52,4 @@ on first use. `docs/config.example.json` in the repo is a reference template.
 
 - [Config and data paths](config-paths.md) — prerequisite: where this file lives on each OS.
 - [CLI commands](../cli/cli-commands.md) — see-also: `lmConfig` is the primary way to modify this file.
-- [Ollama client](../engine/ollama-client.md) — see-also: `backend` and `server` are consumed here.
+- [HTTP backend client](../backend/client.md) — see-also: `backend` and `server` are consumed here.

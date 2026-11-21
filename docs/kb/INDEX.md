@@ -16,7 +16,7 @@
 
 ## Controlled tags
 
-`architecture`, `config`, `cli`, `sessions`, `engine`, `cicd`, `packaging`, `design`, `planning`
+`architecture`, `config`, `cli`, `sessions`, `backend`, `cicd`, `packaging`, `design`, `planning`
 
 ---
 
@@ -34,16 +34,16 @@
 ### cli
 
 - `20261117-cli-commands` — **CLI commands** — `topics/cli/cli-commands.md` — Full flag reference for lm/lemonpie and lmConfig — every flag, its effect, and usage examples.
+- `20261117-model-verification` — **Model verification state machine** — `topics/cli/model-verification.md` — State machine for lmConfig --add-model — reachability, install check, pull offer, and --force override. Status: Ready.
 - `20261117-code-completion-design` — **Code completion design** — `topics/cli/code-completion-design.md` — Design for --autocomplete mode — role enforcement, output filtering, retry policy, and model sizing tradeoffs. Status: Draft.
 
 ### sessions
 
 - `20261117-session-storage` — **Session storage** — `topics/sessions/session-storage.md` — How chat sessions are persisted locally — file location, write strategy, and history format.
 
-### engine
+### backend
 
-- `20261117-ollama-client` — **HTTP backend client** — `topics/engine/ollama-client.md` — Unified OpenAI-compatible HTTP client supporting Ollama, llama.cpp, LM Studio, vLLM, and hosted APIs.
-- `20261117-model-verification` — **Model verification state machine** — `topics/engine/model-verification.md` — State machine for lmConfig --add-model — reachability, install check, pull offer, and --force override. Status: Ready.
+- `20261117-http-client` — **HTTP backend client** — `topics/backend/client.md` — Unified OpenAI-compatible HTTP client (client.py) supporting Ollama, llama.cpp, LM Studio, vLLM, and hosted APIs.
 
 ### cicd
 

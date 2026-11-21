@@ -3,7 +3,7 @@ id: 20261117-code-completion-design
 title: Code completion design
 tags: [cli, design]
 created: 2026-11-17
-updated: 2026-11-17
+updated: 2026-11-20
 related: [20261117-cli-commands, 20261117-config-format, 20261117-model-verification]
 summary: Design for --autocomplete mode — role enforcement, config additions, output filtering, retry policy, and model sizing tradeoffs.
 ---
@@ -87,4 +87,4 @@ Ship behind `--experimental-autocomplete` initially, promote once stable.
 
 - [CLI commands](cli-commands.md) — see-also: flags will be added to the `lm` reference when implemented.
 - [Config file format](../config/config-format.md) — supports: adds `default_autocomplete_model` and `roles` fields.
-- [Model verification](../engine/model-verification.md) — reuses: `--add-model` state machine for verifying the autocomplete model.
+- [Model verification](model-verification.md) — reuses: `--add-model` state machine for verifying the autocomplete model.
