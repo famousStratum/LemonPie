@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.3.2 (2026-11-23)
+
+<!-- Release notes generated using configuration in .github/release.yml at main -->
+
+## What's Changed
+### Documentation
+* docs: add agent knowledge base and clean up source docs by @famousStratum in https://github.com/famousStratum/LemonPie/pull/50
+### Other Changes
+* ci(changelog): configure GitHub API changelog generation by @famousStratum in https://github.com/famousStratum/LemonPie/pull/52
+
+
+**Full Changelog**: https://github.com/famousStratum/LemonPie/compare/v0.3.1...v0.3.2
+
 ## [0.3.1](https://github.com/famousStratum/LemonPie/compare/v0.3.0...v0.3.1) (2026-11-15)
 
 
