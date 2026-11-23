@@ -1,9 +1,11 @@
 {
   "release-type": "python",
+  "changelog-type": "github",
+  "pull-request-title-pattern": "chore(release): lemonpie-cli v${version}",
+  "pull-request-header": "## Release Summary\nReview the proposed version bump and changelog entries below. Merge this PR when ready to publish the release.",
   "packages": {
     ".": {
       "package-name": "lemonpie-cli",
-      "changelog-path": "CHANGELOG.md",
       "bump-minor-pre-major": true,
       "bump-patch-for-minor-pre-major": true,
       "prerelease": true,
