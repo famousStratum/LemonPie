@@ -24,7 +24,7 @@
 
 ### ⚠ BREAKING CHANGES
 
-* add multi-backend support for OpenAI-compatible inference servers ([#42](https://github.com/famousStratum/LemonPie/issues/42))
+* add multi-backend support for OpenAI-compatible inference servers; existing server configuration formats may require updating ([#42](https://github.com/famousStratum/LemonPie/issues/42))
 
 ### Features
 
@@ -35,20 +35,20 @@
 
 ### Documentation
 
-* Make all links absolute in README.md ([#40](https://github.com/famousStratum/LemonPie/issues/40)) ([3ec603e](https://github.com/famousStratum/LemonPie/commit/3ec603e4861008303ccdedc6736dbb178fe52c8c))
+* make all links absolute in README.md ([#40](https://github.com/famousStratum/LemonPie/issues/40)) ([3ec603e](https://github.com/famousStratum/LemonPie/commit/3ec603e4861008303ccdedc6736dbb178fe52c8c))
 
 ## [0.2.0-rc2](https://github.com/famousStratum/LemonPie/compare/v0.2.0-rc1...v0.2.0-rc2) (2026-11-01)
 
 
 ### Features
 
-* lmConfig --init — interactive setup wizard ([#37](https://github.com/famousStratum/LemonPie/issues/37)) ([a9cc56d](https://github.com/famousStratum/LemonPie/commit/a9cc56db38ee17735fbdd6d607a34cd06e352372))
+* add interactive setup wizard via lmConfig --init ([#37](https://github.com/famousStratum/LemonPie/issues/37)) ([a9cc56d](https://github.com/famousStratum/LemonPie/commit/a9cc56db38ee17735fbdd6d607a34cd06e352372))
 
 
 ### Documentation
 
-* reflect lmConfig --init in README and /docs ([#38](https://github.com/famousStratum/LemonPie/issues/38)) ([b1d0bd9](https://github.com/famousStratum/LemonPie/commit/b1d0bd95f1e96be12a4dea24ef79a5711deebdf1))
-* split roadmap into design docs and add command reference ([#34](https://github.com/famousStratum/LemonPie/issues/34)) ([a382aac](https://github.com/famousStratum/LemonPie/commit/a382aac6d480963fce7f4486926e315a51741aaf))
+* document lmConfig --init in README and docs ([#38](https://github.com/famousStratum/LemonPie/issues/38)) ([b1d0bd9](https://github.com/famousStratum/LemonPie/commit/b1d0bd95f1e96be12a4dea24ef79a5711deebdf1))
+* reorganise roadmap into design documents and add a command reference ([#34](https://github.com/famousStratum/LemonPie/issues/34)) ([a382aac](https://github.com/famousStratum/LemonPie/commit/a382aac6d480963fce7f4486926e315a51741aaf))
 
 ## [0.2.0-rc1](https://github.com/famousStratum/LemonPie/compare/v0.2.0-beta.1...v0.2.0-rc1) (2026-09-22)
 
@@ -62,14 +62,14 @@
 
 ### Bug Fixes
 
-* eliminate now_ts() double-calls and session ID collisions in session creation ([#27](https://github.com/famousStratum/LemonPie/issues/27)) ([7864136](https://github.com/famousStratum/LemonPie/commit/7864136b6dc200e1e682b61252eadc74e99ac66a))
+* prevent session ID collisions during session creation ([#27](https://github.com/famousStratum/LemonPie/issues/27)) ([7864136](https://github.com/famousStratum/LemonPie/commit/7864136b6dc200e1e682b61252eadc74e99ac66a))
 
 ## [0.2.0-alpha.3](https://github.com/famousStratum/LemonPie/compare/v0.2.0-alpha.2...v0.2.0-alpha.3) (2026-09-21)
 
 
 ### Bug Fixes
 
-* resolve tuple/dict mismatch in model alias lookup and dead code in session loading ([#23](https://github.com/famousStratum/LemonPie/issues/23)) ([65152bf](https://github.com/famousStratum/LemonPie/commit/65152bf9d6df0d91addad5aa72f73145383b99d9))
+* fix model alias lookup and remove dead session-loading code ([#23](https://github.com/famousStratum/LemonPie/issues/23)) ([65152bf](https://github.com/famousStratum/LemonPie/commit/65152bf9d6df0d91addad5aa72f73145383b99d9))
 
 ## [0.2.0-alpha.2](https://github.com/famousStratum/LemonPie/compare/lemonpie-cli-v0.2.0-alpha.1...lemonpie-cli-v0.2.0-alpha.2) (2026-09-21)
 
@@ -78,7 +78,7 @@
 
 * **cli:** enhance error handling, model defaults, timeouts, and connection status ([9147dc0](https://github.com/famousStratum/LemonPie/commit/9147dc0293065f0b2227ac8f36cdacf0502ca7c4))
 * **cli:** improve connection error handling, timeouts, and documentation ([83e2659](https://github.com/famousStratum/LemonPie/commit/83e2659182717d82feb28be4b85d14e85679d751))
-* **paths:** Depend on platformdirs for config/session paths; bump requires-python to &gt;=3.11 ([6fbf8e9](https://github.com/famousStratum/LemonPie/commit/6fbf8e92d27cbec20c57f404aecf99940329b238))
+* **paths:** depend on platformdirs for config/session paths; bump requires-python to &gt;=3.11 ([6fbf8e9](https://github.com/famousStratum/LemonPie/commit/6fbf8e92d27cbec20c57f404aecf99940329b238))
 
 
 ### Bug Fixes
@@ -93,7 +93,7 @@
 
 ### Documentation
 
-* Add roadmap section to README and initial state-machine design doc ([fa9b000](https://github.com/famousStratum/LemonPie/commit/fa9b0009aaca85cbcd3e5a6f1e1c6c4d3bc40196))
+* add roadmap section to README and initial state-machine design doc ([fa9b000](https://github.com/famousStratum/LemonPie/commit/fa9b0009aaca85cbcd3e5a6f1e1c6c4d3bc40196))
 * update README for src/ layout and platformdirs ([a15cde2](https://github.com/famousStratum/LemonPie/commit/a15cde25a08c49d11366bc64c31aa80da9590838))
 * update README.md ([cf7a046](https://github.com/famousStratum/LemonPie/commit/cf7a0468474cc6bb47dbf33148a6b18d11b44fdf))
 * update roadmap in README.md ([d0a3316](https://github.com/famousStratum/LemonPie/commit/d0a33167361efd400682f54780aaf3fff738e41d))
