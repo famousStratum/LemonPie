@@ -2,6 +2,7 @@
 
 ## How to use this KB (for agents)
 
+0. This KB records what is **implemented today**. Code and tests are the source of truth; if a note disagrees with the code, fix the note in the same change.
 1. Read this index first. Pick notes by their one-line descriptions; open only those.
 2. To answer a question, prefer opening 1–3 specific notes over scanning everything.
 3. Cite the note `id` when you use information from it.
@@ -13,10 +14,12 @@
 - Same idea, new information → edit the note in place and bump `updated`.
 - Any create / rename / delete **must** update this registry and the topic's `_topic.md` in the same change.
 - Use only tags from the controlled vocabulary below; add a new tag here before using it.
+- Only document implemented behavior. Proposals and brainstorms belong in `docs/design/`, which is not part of the KB and is not a source of truth for existing code.
+- When something is removed or replaced, delete its note outright and remove every reference to it (registry, `_topic.md`, `related:` ids, links). Do not leave tombstone or 'obsolete' notes.
 
 ## Controlled tags
 
-`architecture`, `config`, `cli`, `sessions`, `backend`, `cicd`, `packaging`, `design`, `planning`
+`architecture`, `config`, `cli`, `sessions`, `backend`, `cicd`, `packaging`
 
 ---
 
@@ -34,8 +37,6 @@
 ### cli
 
 - `20261117-cli-commands` — **CLI commands** — `topics/cli/cli-commands.md` — Full flag reference for lm/lemonpie and lmConfig — every flag, its effect, and usage examples.
-- `20261117-model-verification` — **Model verification state machine** — `topics/cli/model-verification.md` — State machine for lmConfig --add-model — reachability, install check, pull offer, and --force override. Status: Ready.
-- `20261117-code-completion-design` — **Code completion design** — `topics/cli/code-completion-design.md` — Design for --autocomplete mode — role enforcement, output filtering, retry policy, and model sizing tradeoffs. Status: Draft.
 
 ### sessions
 
@@ -49,8 +50,3 @@
 
 - `20261117-ci-workflow` — **CI workflow** — `topics/cicd/ci-workflow.md` — GitHub Actions CI pipeline — triggers, what it runs, and the tools it uses (uv, pytest).
 - `20261117-release-workflow` — **Release workflow** — `topics/cicd/release-workflow.md` — release-please manages the PR and tag, then PyPI publish uses OIDC trusted publishing.
-- `20261117-packaging-design` — **Cross-platform packaging design** — `topics/cicd/packaging-design.md` — Brainstorm for apt, winget, and Homebrew distribution — build flow, signing, CI/CD integration. Status: Brainstorm.
-
-### planning
-
-- `20261117-feature-backlog` — **Feature backlog** — `topics/planning/feature-backlog.md` — Prioritized backlog and roadmap status — what's planned, deferred, and done, with links to design docs.

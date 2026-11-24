@@ -3,8 +3,8 @@ id: 20261117-cli-commands
 title: CLI commands
 tags: [cli]
 created: 2026-11-17
-updated: 2026-11-17
-related: [20261117-config-format, 20261117-session-storage, 20261117-model-verification]
+updated: 2026-11-24
+related: [20261117-config-format, 20261117-session-storage]
 summary: Full flag reference for lm/lemonpie and lmConfig — every flag, its effect, and usage examples.
 ---
 
@@ -85,4 +85,3 @@ lm [FLAGS] [PROMPT]
 
 - [Config file format](../config/config-format.md) — prerequisite: `lmConfig` reads and writes this file.
 - [Session storage](../sessions/session-storage.md) — see-also: `-l`, `-p`, `-d`, `-c`, `-s` all interact with stored sessions.
-- [Model verification](../engine/model-verification.md) — see-also: `--add-model` triggers the verification state machine.
