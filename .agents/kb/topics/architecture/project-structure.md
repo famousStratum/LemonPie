@@ -3,7 +3,7 @@ id: 20261117-project-structure
 title: Project structure
 tags: [architecture]
 created: 2026-11-17
-updated: 2026-11-20
+updated: 2026-11-24
 related: [20261117-http-client, 20261117-cli-commands, 20261117-session-storage]
 summary: Source layout of the lemonpie package — what each module does and how they relate.
 ---
@@ -26,7 +26,7 @@ src/lemonpie/
   config.py         # Config load, save, and schema
   paths.py          # OS-appropriate config/data directory resolution (via platformdirs)
   time_utils.py     # Timestamp helpers
-  models.py         # Model alias resolution (moved from engine/ during multi-backend integration)
+  models.py         # Model alias resolution
   client.py         # OpenAI-compatible HTTP client — streaming chat, backend ops
   cli/
     parser.py       # Argument parsing for `lm`
