@@ -27,15 +27,19 @@ Planned logic for `lmConfig --add-model`:
 
 <sub>*See* docs/design/[code-completion.md](design/code-completion.md) *for brainstorming and design notes.* </sub>
 
-## ~~Enhanced error handling and user feedback~~ ✅ Done
-- Connection refused, timeout, DNS, and protocol errors with actionable hints
-- Tightened exception handling throughout
 
-## Multi-backend support ✅ Done
-- Unified OpenAI-compatible HTTP client (`/v1/chat/completions`) works with Ollama, llama.cpp, LM Studio, vLLM, and any compatible server
-- `backend` field in config for identification and hints
-- Optional `api_key` support for hosted APIs
-- `lmConfig --init` guides users through backend selection and server setup
+## Multi-backend support 
+- Unified OpenAI-compatible HTTP client (`/v1/chat/completions`) works with Ollama, llama.cpp, LM Studio, vLLM, and any compatible server ✅ Done
+- `backend` field in config for identification and hints ✅ Done
+- Optional `api_key` support for hosted APIs❗API key not integrated into `lmConfig --init` yet
+- `lmConfig --init` guides users through backend selection and server setup 
 
 ## Future schema validation
 - Config/session file validation
+
+<br>
+<br>
+<br>
+
+---
+<sub>*See* docs/design/[feature-ideas.md](docs\design\feature-ideas.md) *for promoting features into the roadmap*</sub>
