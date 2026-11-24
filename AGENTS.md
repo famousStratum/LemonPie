@@ -31,16 +31,31 @@ src/lemonpie/
 └── sessions/storage.py  # session persistence
 tests/                 # conftest.py, test_cli.py, test_client.py,
                        # test_config_cmd.py, test_dry_run.py, test_sessions.py
-docs/                  # ROADMAP.md, config.example.json, design/, usage/command-index.md,
-                       # kb/ (knowledge base: INDEX.md + topics/)
+docs/                  # human-facing: ROADMAP.md, config.example.json, usage/command-index.md,
+                       # design/ (proposals and brainstorming, see below)
+.agents/kb/            # agent-facing knowledge base (INDEX.md + topics/)
 .github/workflows/     # ci.yml, release.yml, pr-labler.yml
 .release-please/       # config.json, manifest.json
 ```
 
-There is no `engine/` package; model and client code is flat (`client.py`, `models.py`).
-Some older docs (including parts of `docs/kb/` such as `engine/`) may still use the
-earlier Ollama-only vocabulary. Trust the code over the docs when they disagree, and
-fix the docs when you notice.
+## Knowledge base (`.agents/kb/`)
+
+The KB is agent-facing documentation of what is **implemented today**. It is separate from
+`docs/`, which is for users and developers.
+
+- Before non-trivial work (new features, config schema, CI/release, session format), read
+  `.agents/kb/INDEX.md` and open only the 1-3 notes relevant to the task.
+- Source of truth for existing behavior, in order: code and tests, then the KB. If a note
+  disagrees with the code, fix the note in the same PR.
+- `docs/design/` holds the maintainer's proposals and brainstorming. It is **not** part of
+  the KB and **not** a source of truth for existing code. Read it only when asked to build
+  or review a feature designed there. When a design ships, document the result in the KB.
+- Only document implemented behavior in the KB. Don't mirror design docs into it.
+- Follow the update rules in `INDEX.md`: any note create, rename, or delete updates the
+  registry and the topic's `_topic.md` in the same change; bump `updated` on edits.
+- When removing or replacing something, delete it outright and remove every reference to it
+  (code, docs, KB registry, `related:` ids, links, README tree). Never leave an
+  "obsolete" tombstone. Finish by grepping the repo for the old names and paths.
 
 ## Setup and commands
 
@@ -108,7 +123,8 @@ When behavior changes, update in the same PR:
 
 - `README.md` (features, usage, project structure)
 - `docs/usage/command-index.md` (command reference)
-- `docs/ROADMAP.md` (remove items that ship) and relevant `docs/design/` or `docs/kb/` pages
+- `docs/ROADMAP.md` (remove items that ship) and the matching `docs/design/` page if the feature came from one
+- the relevant `.agents/kb/` notes (and its `INDEX.md` registry)
 - `docs/config.example.json` if the config schema changes
 
 Use absolute links in `README.md`, since PyPI renders it outside the repo.
