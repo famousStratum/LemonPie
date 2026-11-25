@@ -2,14 +2,14 @@
 
 import json
 
-import httpx
+import httpx2
 
 
 def build_client(server_host, timeout, api_key=None):
     headers = {}
     if api_key:
         headers["Authorization"] = f"Bearer {api_key}"
-    return httpx.Client(base_url=server_host, timeout=timeout, headers=headers)
+    return httpx2.Client(base_url=server_host, timeout=timeout, headers=headers)
 
 
 def build_payload(model, messages, stream=True, **extra_params):
@@ -47,14 +47,14 @@ def stream_chat(client, payload):
 
 def resolve_error(exc: Exception, server_host: str) -> tuple[str, str | None]:
     """
-    Map an exception raised during an httpx request to a (message, hint)
+    Map an exception raised during an httpx2 request to a (message, hint)
     pair suitable for printing to the user. `hint` may be None.
     """
     msg = str(exc)
     msg_lower = msg.lower()
 
-    if isinstance(exc, httpx.TimeoutException):
-        if isinstance(exc, httpx.ConnectTimeout):
+    if isinstance(exc, httpx2.TimeoutException):
+        if isinstance(exc, httpx2.ConnectTimeout):
             return (
                 "Failed to contact server: Connection timed out.",
                 f"Hint: The server at '{server_host}' is unreachable. Verify the network and IP/port settings.",
@@ -64,7 +64,7 @@ def resolve_error(exc: Exception, server_host: str) -> tuple[str, str | None]:
             f"Hint: The server at '{server_host}' accepted the connection, but took too long to respond.",
         )
 
-    if isinstance(exc, httpx.ConnectError):
+    if isinstance(exc, httpx2.ConnectError):
         refused_errors = (
             "errno 111",
             "errno 61",
@@ -110,13 +110,13 @@ def resolve_error(exc: Exception, server_host: str) -> tuple[str, str | None]:
             f"Hint: Check your network connection and verify '{server_host}' is reachable.",
         )
 
-    if isinstance(exc, httpx.ProtocolError):
+    if isinstance(exc, httpx2.ProtocolError):
         return (
             f"Failed to contact server: Invalid protocol response ({msg}).",
             f"Hint: Ensure '{server_host}' is speaking HTTP/HTTPS and not another protocol (like SSH or raw TCP).",
         )
 
-    if isinstance(exc, httpx.InvalidURL):
+    if isinstance(exc, httpx2.InvalidURL):
         return (
             f"Invalid server URL: '{server_host}'.",
             "Hint: Ensure the URL includes the scheme (e.g., 'http://' or 'https://').",

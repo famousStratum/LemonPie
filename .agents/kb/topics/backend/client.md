@@ -14,7 +14,7 @@ summary: How lemonpie talks to AI backends — a unified OpenAI-compatible HTTP 
 
 ## Context
 
-All backend communication is encapsulated in `src/lemonpie/client.py` using `httpx` (no vendor SDK).
+All backend communication is encapsulated in `src/lemonpie/client.py` using `httpx2` (no vendor SDK).
 
 ## Supported backends
 

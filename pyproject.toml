@@ -20,7 +20,7 @@ classifiers = [
 ]
 
 dependencies = [
-  "httpx",
+  "httpx2",
   "platformdirs"
 ]
 

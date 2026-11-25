@@ -20,7 +20,7 @@ See README.md for details and maintainer notes.
 import json
 import sys
 
-import httpx
+import httpx2
 
 from lemonpie.cli.parser import build_parser
 from lemonpie.cli.ui import (
@@ -145,9 +145,7 @@ def main():
             {"role": m["role"], "content": m["content"]} for m in history
         ]
         if args.prompt:
-            payload_messages.append(
-                {"role": "user", "content": " ".join(args.prompt)}
-            )
+            payload_messages.append({"role": "user", "content": " ".join(args.prompt)})
 
         if not payload_messages:
             print("No messages to send. Provide a prompt or load a session.")
@@ -229,7 +227,7 @@ def main():
             print("\nInterrupted by user.")
             sys.exit(1)
 
-        except httpx.HTTPError as e:
+        except httpx2.HTTPError as e:
             title, hint = resolve_error(e, server_host)
             print("\n" + title)
             if hint:

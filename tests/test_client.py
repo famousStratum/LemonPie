@@ -4,7 +4,7 @@ import json
 from contextlib import contextmanager
 from unittest.mock import MagicMock, patch
 
-import httpx
+import httpx2
 
 from lemonpie.client import build_client, build_payload, resolve_error, stream_chat
 
@@ -44,20 +44,20 @@ def _mock_stream(lines):
 
 
 class TestBuildClient:
-    def test_returns_httpx_client(self):
-        client = build_client(SERVER, httpx.Timeout(5.0))
-        assert isinstance(client, httpx.Client)
+    def test_returns_httpx2_client(self):
+        client = build_client(SERVER, httpx2.Timeout(5.0))
+        assert isinstance(client, httpx2.Client)
 
     def test_sets_base_url(self):
-        client = build_client(SERVER, httpx.Timeout(5.0))
+        client = build_client(SERVER, httpx2.Timeout(5.0))
         assert SERVER in str(client.base_url)
 
     def test_no_auth_header_without_api_key(self):
-        client = build_client(SERVER, httpx.Timeout(5.0))
+        client = build_client(SERVER, httpx2.Timeout(5.0))
         assert "authorization" not in client.headers
 
     def test_sets_auth_header_with_api_key(self):
-        client = build_client(SERVER, httpx.Timeout(5.0), api_key="sk-test")
+        client = build_client(SERVER, httpx2.Timeout(5.0), api_key="sk-test")
         assert client.headers["authorization"] == "Bearer sk-test"
 
 
@@ -68,7 +68,7 @@ class TestBuildClient:
 
 class TestStreamChat:
     def _client(self):
-        return httpx.Client(base_url=SERVER)
+        return httpx2.Client(base_url=SERVER)
 
     def test_yields_content_chunks(self):
         client = self._client()
@@ -164,55 +164,55 @@ class TestStreamChat:
 
 class TestResolveError:
     def test_connect_timeout(self):
-        exc = httpx.ConnectTimeout("timed out")
+        exc = httpx2.ConnectTimeout("timed out")
         msg, hint = resolve_error(exc, SERVER)
         assert "timed out" in msg.lower()
         assert hint is not None and SERVER in hint
 
     def test_read_timeout(self):
-        exc = httpx.ReadTimeout("read timed out")
+        exc = httpx2.ReadTimeout("read timed out")
         msg, hint = resolve_error(exc, SERVER)
         assert "timed out" in msg.lower()
         assert hint is not None and SERVER in hint
 
     def test_connection_refused(self):
-        exc = httpx.ConnectError("[Errno 111] Connection refused")
+        exc = httpx2.ConnectError("[Errno 111] Connection refused")
         msg, hint = resolve_error(exc, SERVER)
         assert "Connection refused" in msg
         assert hint is not None and SERVER in hint
 
     def test_connection_refused_windows(self):
-        exc = httpx.ConnectError("[Errno 10061] actively refused it")
+        exc = httpx2.ConnectError("[Errno 10061] actively refused it")
         msg, hint = resolve_error(exc, SERVER)
         assert "Connection refused" in msg
         assert hint is not None and SERVER in hint
 
     def test_dns_failure(self):
-        exc = httpx.ConnectError("[Errno -2] Name or service not known")
+        exc = httpx2.ConnectError("[Errno -2] Name or service not known")
         msg, hint = resolve_error(exc, SERVER)
         assert "resolve" in msg.lower()
         assert hint is not None and SERVER in hint
 
     def test_dns_failure_windows(self):
-        exc = httpx.ConnectError("[Errno 11001] No such host is known")
+        exc = httpx2.ConnectError("[Errno 11001] No such host is known")
         msg, hint = resolve_error(exc, SERVER)
         assert "resolve" in msg.lower()
         assert hint is not None and SERVER in hint
 
     def test_protocol_error(self):
-        exc = httpx.ProtocolError("invalid protocol response")
+        exc = httpx2.ProtocolError("invalid protocol response")
         msg, hint = resolve_error(exc, SERVER)
         assert "protocol" in msg.lower()
         assert hint is not None and SERVER in hint
 
     def test_invalid_url(self):
-        exc = httpx.InvalidURL("invalid url")
+        exc = httpx2.InvalidURL("invalid url")
         msg, hint = resolve_error(exc, SERVER)
         assert "invalid" in msg.lower()
         assert hint is not None
 
     def test_unrecognised_error_returns_no_hint(self):
-        exc = httpx.HTTPError("something unexpected")
+        exc = httpx2.HTTPError("something unexpected")
         msg, hint = resolve_error(exc, SERVER)
         assert "Failed to contact server" in msg
         assert hint is None
