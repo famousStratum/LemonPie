@@ -18,6 +18,7 @@ def mock_argv():
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 def _mock_args(**overrides):
     """Build a parser-args mock with sensible defaults."""
     defaults = {
@@ -41,11 +42,14 @@ def _mock_args(**overrides):
 # --dry-run: no prompt, no session
 # ---------------------------------------------------------------------------
 
+
 class TestDryRunNoPrompt:
     def test_exits_zero_and_prints_message(self, isolated_dirs, write_cfg, capsys):
         """No prompt + no current session → 'No messages to send', exit 0."""
         with patch("lemonpie.main.build_parser") as mock_parser_cls:
-            mock_parser_cls.return_value.parse_args.return_value = _mock_args(dry_run=True)
+            mock_parser_cls.return_value.parse_args.return_value = _mock_args(
+                dry_run=True
+            )
             with pytest.raises(SystemExit) as exc:
                 main()
         assert exc.value.code == 0
@@ -55,6 +59,7 @@ class TestDryRunNoPrompt:
 # ---------------------------------------------------------------------------
 # --dry-run: prompt with no existing session
 # ---------------------------------------------------------------------------
+
 
 class TestDryRunPromptNoSession:
     def test_payload_contains_only_user_message(self, isolated_dirs, write_cfg, capsys):
@@ -93,8 +98,11 @@ class TestDryRunPromptNoSession:
 # --dry-run: -s flag takes precedence over current session pointer
 # ---------------------------------------------------------------------------
 
+
 class TestDryRunWithSessionFlag:
-    def test_loads_specified_session_not_current(self, isolated_dirs, write_cfg, capsys):
+    def test_loads_specified_session_not_current(
+        self, isolated_dirs, write_cfg, capsys
+    ):
         """-s <id> loads that session's history, not the current session's."""
         # Create two sessions with different history
         session_a = {
@@ -117,15 +125,17 @@ class TestDryRunWithSessionFlag:
         }
 
         # Write session A as the "current" session
-        isolated_dirs["current_file"].write_text("20260101-000000-aaa", encoding="utf-8")
-        isolated_dirs["session_dir"].joinpath(
-            "20260101-000000-aaa.json"
-        ).write_text(json.dumps(session_a), encoding="utf-8")
+        isolated_dirs["current_file"].write_text(
+            "20260101-000000-aaa", encoding="utf-8"
+        )
+        isolated_dirs["session_dir"].joinpath("20260101-000000-aaa.json").write_text(
+            json.dumps(session_a), encoding="utf-8"
+        )
 
         # Write session B (the one we want to load via -s)
-        isolated_dirs["session_dir"].joinpath(
-            "20260101-000000-bbb.json"
-        ).write_text(json.dumps(session_b), encoding="utf-8")
+        isolated_dirs["session_dir"].joinpath("20260101-000000-bbb.json").write_text(
+            json.dumps(session_b), encoding="utf-8"
+        )
 
         with patch("lemonpie.main.build_parser") as mock_parser_cls:
             mock_parser_cls.return_value.parse_args.return_value = _mock_args(
@@ -155,6 +165,7 @@ class TestDryRunWithSessionFlag:
 # ---------------------------------------------------------------------------
 # Regression guard: normal prompt flow still works
 # ---------------------------------------------------------------------------
+
 
 class TestNormalPromptFlow:
     def test_sends_request_via_stream_chat(self, isolated_dirs, write_cfg):
@@ -188,6 +199,7 @@ class TestNormalPromptFlow:
 # ---------------------------------------------------------------------------
 # --dry-run intercepts for write/delete operations
 # ---------------------------------------------------------------------------
+
 
 class TestDryRunIntercepts:
     def test_delete_prints_message_and_exits_zero(self, write_cfg, capsys):

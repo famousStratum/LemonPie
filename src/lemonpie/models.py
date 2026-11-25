@@ -46,15 +46,17 @@ def handle_model_switch(cfg, session, requested_model):
         new_model = name_entry["name"]
     else:
         print(f'Warning: "{requested_model}" is not a known alias or configured model.')
-        print('To add it, use lmConfig --add-model <alias> <model_name>')
+        print("To add it, use lmConfig --add-model <alias> <model_name>")
         sys.exit(0)
 
     if new_model != session.get("model"):
-        confirm = input(f'Change session {session["id"]} model to "{new_model}"? (Y/n): ')
+        confirm = input(
+            f'Change session {session["id"]} model to "{new_model}"? (Y/n): '
+        )
         if confirm.lower() in ("y", "yes", ""):
             session["model"] = new_model
             save_session(session["id"], session)
-            print(f'Session model updated to {new_model}.')
+            print(f"Session model updated to {new_model}.")
         else:
             print("Aborted model change.")
 

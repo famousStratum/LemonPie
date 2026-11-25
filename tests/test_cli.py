@@ -96,7 +96,9 @@ class TestLmConfigParser:
         assert args.host == "http://127.0.0.1:11434"
 
     def test_add_model_takes_alias_and_name(self):
-        args = build_lmconfig_parser().parse_args(["--add-model", "qwen", "qwen2.5-coder:3b"])
+        args = build_lmconfig_parser().parse_args(
+            ["--add-model", "qwen", "qwen2.5-coder:3b"]
+        )
         assert args.add_model == ["qwen", "qwen2.5-coder:3b"]
 
     def test_add_model_with_force(self):
