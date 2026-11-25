@@ -2,7 +2,7 @@ import json
 import os
 from urllib.parse import urlparse
 
-import httpx
+import httpx2
 
 from lemonpie.paths import CONFIG_FILE
 
@@ -69,4 +69,4 @@ def config_file_path():
 
 
 def build_timeout():
-    return httpx.Timeout(connect=5.0, read=600.0, write=30.0, pool=5.0)
+    return httpx2.Timeout(connect=5.0, read=600.0, write=30.0, pool=5.0)

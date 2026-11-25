@@ -13,7 +13,7 @@ Linux, macOS, and Windows.
 
 - Python `>=3.11`, licensed GPL-3.0-or-later
 - Build: `hatchling` + `hatch-vcs` (version comes from git tags); managed with `uv`
-- Runtime dependencies: `httpx`, `platformdirs` (keep it this small)
+- Runtime dependencies: `httpx2`, `platformdirs` (keep it this small)
 - Entry points (`pyproject.toml`): `lm` and `lemonpie` -> `lemonpie.main:main`; `lmConfig` -> `lemonpie.cli.config_cmd:main`
 
 ## Repository layout
@@ -90,7 +90,7 @@ uv run lm -v               # smoke test the CLI
 - `--dry-run` must never send requests or modify data. Any new action that sends a request or writes to disk has to respect it (and needs a case in `test_dry_run.py`).
 - Don't hand-roll session dicts; go through `create_session()` so timestamps and IDs stay consistent (single timestamp snapshot, collision-proof IDs).
 - Be backend-neutral. Don't hardcode Ollama-specific endpoints or behavior outside code paths that are explicitly gated on `backend`.
-- Catch specific exceptions (e.g. `httpx.ConnectError`, `TimeoutException`, `JSONDecodeError`), not bare `except`.
+- Catch specific exceptions (e.g. `httpx2.ConnectError`, `TimeoutException`, `JSONDecodeError`), not bare `except`.
 - Never edit `src/lemonpie/_version.py`.
 
 ## Testing

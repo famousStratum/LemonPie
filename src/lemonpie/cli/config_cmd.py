@@ -17,7 +17,7 @@ import json
 import os
 import sys
 
-import httpx
+import httpx2
 
 from lemonpie.cli.ui import confirm
 from lemonpie.config import (
@@ -199,15 +199,15 @@ def fetch_available_models(server):
     models in a single round-trip.
     """
     try:
-        resp = httpx.get(f"{server.rstrip('/')}/v1/models", timeout=5.0)
+        resp = httpx2.get(f"{server.rstrip('/')}/v1/models", timeout=5.0)
         resp.raise_for_status()
         data = resp.json()
         return [m["id"] for m in data.get("data", [])], None
-    except httpx.ConnectError:
+    except httpx2.ConnectError:
         return [], "Connection refused"
-    except httpx.TimeoutException:
+    except httpx2.TimeoutException:
         return [], "Connection timed out"
-    except httpx.HTTPError as exc:
+    except httpx2.HTTPError as exc:
         return [], f"HTTP error: {exc}"
     except (json.JSONDecodeError, KeyError, TypeError) as exc:
         return [], f"Invalid response format from server, {exc}"
