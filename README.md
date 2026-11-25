@@ -1,12 +1,22 @@
 # LemonPie
 
 ![PyPI Version](https://img.shields.io/pypi/v/lemonpie-cli)
-![GitHub License](https://img.shields.io/github/license/famousstratum/lemonpie)
 ![Python Version from PEP 621 TOML](https://img.shields.io/python/required-version-toml?tomlFilePath=https%3A%2F%2Fraw.githubusercontent.com%2FfamousStratum%2FLemonPie%2Frefs%2Fheads%2Fmain%2Fpyproject.toml)
 
 **LemonPie — A lightweight CLI for LLM inference servers**
 
-LemonPie is a compact CLI for chatting with any OpenAI-compatible inference server — Ollama, llama.cpp, LM Studio, vLLM, and others. It manages chat sessions and persists history locally, designed to be tiny and portable — ideal for lightweight systems and terminal users, but usable anywhere with Python and network access.
+LemonPie is a compact CLI for chatting with any OpenAI-compatible inference server — Ollama, llama.cpp, LM Studio, vLLM, and others. It manages chat sessions and persists history locally, designed to be tiny and portable — ideal for lightweight systems and terminal users, but usable anywhere with Python.
+
+
+
+## 🚀 Quickstart
+See [Installation](#-installation) for detailed installation instructions, [Configuration](#️-configuration) for configuration logic and structure, and [Usage](#️-usage) for usage examples
+
+1. Install:     `uv tool install lemonpie-cli`
+
+2. Configure:   `lmConfig --init`
+
+3. Run:         `lm "Hello World!"`
 
 
 
@@ -53,6 +63,37 @@ LemonPie/
 └── .gitignore
 ```
 
+## 📦 Installation
+
+LemonPie requires **Python 3.11 or newer**. It installs three commands: `lm`, `lemonpie` (an alias), and `lmConfig`.
+
+The recommended approach is to install it as an isolated command-line tool, so it doesn't interfere with your other Python projects.
+
+### With [uv](https://docs.astral.sh/uv/) (recommended)
+
+```bash
+uv tool install lemonpie-cli
+```
+
+### With [pipx](https://pipx.pypa.io/)
+
+```bash
+pipx install lemonpie-cli
+```
+
+### With [pip](https://pip.pypa.io/en/stable/)
+
+Use this inside a virtual environment:
+
+```bash
+python3 -m venv .venv          # Windows: py -m venv .venv
+source .venv/bin/activate      # Windows: .venv\Scripts\activate
+pip install lemonpie-cli
+```
+___
+> **Note:**
+> On many modern Linux distributions and Homebrew-managed Python installs, a global `pip install` is blocked (`externally-managed-environment`). Use uv, pipx, or a virtual environment instead.
+
 ## ⚙️ Configuration
 
 LemonPie keeps its config file and session history in your OS's standard user directories (via [`platformdirs`](https://pypi.org/project/platformdirs/)) — not in the project folder:
@@ -81,48 +122,46 @@ All three are overridable via environment variables — `LEMONPIE_HOST`, `LEMONP
   ]
 }
 ```
-backend: which inference server you're using (e.g. `ollama`, `llamacpp`, `lmstudio`) \
+backend: a label for the inference server you're using (e.g. `ollama`, `llamacpp`, `lmstudio`) \
 server: base URL of your inference server \
 api_key: optional API key for hosted backends (e.g. OpenAI) \
 default: canonical model name (full identifier) \
 models: list of objects with alias (nullable) and name
 
-## 🚀 Usage
+## 🛠️ Usage
 ### `lm` / `lemonpie`
+
+- Send a prompt\
+`lm "Hello"`\
+<sup>Sends a prompt to the current session</sup>
+
 - Start a new session \
-`lm -n "Hello"`
+`lm -n "is there anybody in there?"`\
+<sup>Starts a new session with the default model and sends the prompt</sup>\
+`lm -n -m <alias> "just nod if you can hear me"`\
+<sup>Starts a new session with a specific model `<alias>` and sends the prompt</sup>
 
-- Start with a specific model\
-`lm -n -m qwen "Hello"`
-
-- Send a prompt to the current session\
-`lm "Tell me about git add"`
-
-- List sessions\
-`lm -l`
-
-- Print current session history\
-`lm -p`
-
-- Show what would happen without sending requests or modifying any data (dry run)\
-`lm --dry-run -n "Hello"`
-
-- Switch model in current session\
-`lm -m qwen2.5-coder:3b`
+- Manage sessions\
+`lm -l`\
+<sup>Lists all sessions, sorted by `<id>`</sup>\
+`lm -p`\
+<sup>Prints current session history</sup>\
+`lm -s <id>`\
+<sup>Loads an existing session by `<id>`</sup>
 
 ### `lmConfig`
 - First-time setup\
-`lmConfig --init`
-
-- First-time setup (skip server verification)\
-`lmConfig --init --force`
+`lmConfig --init`\
+<sup>Walks you through choosing a backend, verifying your server, and registering models.</sup>
 
 - Manage models\
-`lmConfig --add-model qwen qwen2.5-coder:3b`\
+`lmConfig --add-model <alias> <model>`\
+<sup>Adds model mapping: alias → model_full_name</sup>\
 `lmConfig --list-models`\
-`lmConfig --remove-model qwen`
+<sup>Lists configured model aliases and names</sup>
 
-👉 Full [command reference](https://github.com/famousStratum/LemonPie/blob/main/docs/usage/command-index.md).
+
+👉 For full command reference, please read [docs/usage/command-index.md](https://github.com/famousStratum/LemonPie/blob/main/docs/usage/command-index.md)
 
 ## 🗺 Roadmap
 
