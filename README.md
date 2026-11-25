@@ -176,4 +176,4 @@ Planned features and improvements:
 
 ## 📜 License
 
-This project is licensed under the **GNU General Public License v3.0** (**GPLv3**).You may redistribute and/or modify it under the terms of the GPL as published by the Free Software Foundation.See the [**license**](https://github.com/famousStratum/LemonPie/blob/main/LICENSE) file for details.
+This project is licensed under the GNU General Public License v3.0 (**GPLv3**). You may redistribute and/or modify it under the terms of the GPL as published by the Free Software Foundation. See the [**license**](https://github.com/famousStratum/LemonPie/blob/main/LICENSE) file for details.
