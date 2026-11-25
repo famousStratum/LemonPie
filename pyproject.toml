@@ -44,7 +44,10 @@ version-file = "src/lemonpie/_version.py"
 packages = ["src/lemonpie"]
 
 [dependency-groups]
-dev = ["pytest>=8.0"]
+dev = [
+    "pytest>=8.0",
+    "ruff>=0.17.6",
+]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

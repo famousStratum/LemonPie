@@ -4,6 +4,7 @@ from datetime import UTC, datetime
 def now_ts():
     return datetime.now(UTC).astimezone().isoformat()
 
+
 def short_date(iso_ts):
     if not iso_ts:
         return "<unknown>"
