@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.3.2 (2026-11-25)
+
+<!-- Release notes generated using configuration in .github/release.yml at main -->
+
+## What's Changed
+### Other Changes
+* docs: add agent knowledge base and clean up source docs by @famousStratum in https://github.com/famousStratum/LemonPie/pull/50
+* ci(changelog): configure GitHub API changelog generation by @famousStratum in https://github.com/famousStratum/LemonPie/pull/52
+* docs: add AGENTS.md and SECURITY.md | update ROADMAP.md by @famousStratum in https://github.com/famousStratum/LemonPie/pull/58
+* docs: move and clean knowledge-base by @famousStratum in https://github.com/famousStratum/LemonPie/pull/60
+* deps: migrate httpx to httpx2 by @famousStratum in https://github.com/famousStratum/LemonPie/pull/61
+
+
+**Full Changelog**: https://github.com/famousStratum/LemonPie/compare/v0.3.1...v0.3.2
+
 ## [0.3.1](https://github.com/famousStratum/LemonPie/compare/v0.3.0...v0.3.1) (2026-11-15)
 
 
