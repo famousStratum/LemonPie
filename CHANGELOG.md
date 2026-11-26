@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.3.3 (2026-11-26)
+
+<!-- Release notes generated using configuration in .github/release.yml at main -->
+
+## What's Changed
+### New Features
+* feat: add API key management and LEMONPIE_API_KEY override by @famousStratum in https://github.com/famousStratum/LemonPie/pull/65
+
+
+**Full Changelog**: https://github.com/famousStratum/LemonPie/compare/v0.3.2...v0.3.3
+
 ## 0.3.2 (2026-11-25)
 
 <!-- Release notes generated using configuration in .github/release.yml at main -->
