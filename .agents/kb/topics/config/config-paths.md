@@ -3,7 +3,7 @@ id: 20261117-config-paths
 title: Config and data paths
 tags: [config]
 created: 2026-11-17
-updated: 2026-11-17
+updated: 2026-11-26
 related: [20261117-config-format, 20261117-session-storage]
 summary: Where lemonpie stores its config file and session data on Linux, macOS, and Windows, and how to override them.
 ---
@@ -32,7 +32,7 @@ Both directories can be overridden at runtime:
 | Variable | Overrides |
 |---|---|
 | `LEMONPIE_CONFIG_DIR` | Config directory |
-| `LEMONPIE_SESSIONS_DIR` | Sessions directory |
+| `LEMONPIE_SESSION_DIR` | Sessions directory |
 
 Useful for testing, CI runs, or containerized environments where the default OS path
 isn't appropriate.
