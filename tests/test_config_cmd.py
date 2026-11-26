@@ -10,7 +10,7 @@ Approach
 globally with an iterator so every prompt consumes the next queued response
 in order, making the full interaction deterministic.
 
-``fetch_available_models`` makes a network request, so every test that reaches
+``_fetch_with_key`` makes a network request, so every test that reaches
 the server-verification step mocks it at the module level via monkeypatch.
 
 All tests that touch the filesystem use the ``isolated_dirs`` fixture from
@@ -177,10 +177,10 @@ class TestCmdInitForce:
 
 class TestCmdInitServerOk:
     def _mock_server(self, monkeypatch, models):
-        """Patch fetch_available_models to return *models* with no error."""
+        """Patch _fetch_with_key to return *models* with no error."""
         monkeypatch.setattr(
-            "lemonpie.cli.config_cmd.fetch_available_models",
-            lambda _server: (models, None),
+            "lemonpie.cli.config_cmd._fetch_with_key",
+            lambda _server, _key=None: (models, None, False),
         )
 
     def test_server_ok_select_one_model_with_alias(self, isolated_dirs, monkeypatch):
@@ -328,8 +328,8 @@ class TestCmdInitServerOk:
 class TestCmdInitServerUnreachable:
     def _mock_error(self, monkeypatch, err="Connection refused"):
         monkeypatch.setattr(
-            "lemonpie.cli.config_cmd.fetch_available_models",
-            lambda _server: ([], err),
+            "lemonpie.cli.config_cmd._fetch_with_key",
+            lambda _server, _key=None: ([], err, False),
         )
 
     def test_unreachable_user_aborts(self, isolated_dirs, monkeypatch):
@@ -440,8 +440,8 @@ class TestCmdInitInputValidation:
     def test_invalid_url_loops_until_valid(self, isolated_dirs, monkeypatch):
         """Bad URL triggers a re-prompt; second attempt accepted."""
         monkeypatch.setattr(
-            "lemonpie.cli.config_cmd.fetch_available_models",
-            lambda _: ([], None),
+            "lemonpie.cli.config_cmd._fetch_with_key",
+            lambda _server, _key=None: ([], None, False),
         )
         monkeypatch.setattr(
             "builtins.input",
@@ -488,8 +488,8 @@ class TestCmdInitInputValidation:
     def test_invalid_default_number_loops_until_valid(self, isolated_dirs, monkeypatch):
         """Out-of-range and non-numeric entries in the default-pick loop are retried."""
         monkeypatch.setattr(
-            "lemonpie.cli.config_cmd.fetch_available_models",
-            lambda _: (["qwen2.5-coder:3b", "llama3.2:1b"], None),
+            "lemonpie.cli.config_cmd._fetch_with_key",
+            lambda _server, _key=None: (["qwen2.5-coder:3b", "llama3.2:1b"], None, False),
         )
         monkeypatch.setattr(
             "builtins.input",

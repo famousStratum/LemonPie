@@ -105,7 +105,7 @@ LemonPie keeps its config file and session history in your OS's standard user di
 | Windows  | `%LOCALAPPDATA%\lemonpie\`                 | `%LOCALAPPDATA%\lemonpie\sessions\`                       |
 
 
-All three are overridable via environment variables — `LEMONPIE_HOST`, `LEMONPIE_CONFIG_DIR`, and `LEMONPIE_SESSION_DIR` — useful for testing or running in a container.
+All of these are overridable via environment variables — `LEMONPIE_HOST`, `LEMONPIE_CONFIG_DIR`, and `LEMONPIE_SESSION_DIR` — useful for testing or running in a container. Set `LEMONPIE_API_KEY` to supply an API key without storing it in `config.json`; when set, it takes precedence over the config value.
 
 `docs/config.example.json` is a template. Run `lmConfig --init` to set up your config interactively — it verifies server reachability, lists installed models for selection, and writes the file for you. `lmConfig` also auto-creates a minimal config on first use if you prefer to configure manually.
 
@@ -159,6 +159,14 @@ models: list of objects with alias (nullable) and name
 <sup>Adds model mapping: alias → model_full_name</sup>\
 `lmConfig --list-models`\
 <sup>Lists configured model aliases and names</sup>
+
+- Manage the API key\
+`lmConfig --api-key`\
+<sup>Prompts for the key without echoing it (recommended; keeps it out of shell history)</sup>\
+`lmConfig --api-key <key>`\
+<sup>Sets the key directly (it will appear in shell history)</sup>\
+`lmConfig --remove-api-key`\
+<sup>Removes the stored key</sup>
 
 
 👉 For full command reference, please read [docs/usage/command-index.md](https://github.com/famousStratum/LemonPie/blob/main/docs/usage/command-index.md)

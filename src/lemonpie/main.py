@@ -38,6 +38,7 @@ from lemonpie.client import (
 from lemonpie.config import (
     build_timeout,
     load_config,
+    resolve_api_key,
     resolve_server_host,
 )
 from lemonpie.models import (
@@ -60,9 +61,10 @@ from lemonpie.time_utils import now_ts
 
 def main():
     cfg = load_config()
+    api_key = resolve_api_key(cfg)
     server_host = resolve_server_host(cfg)
     timeout = build_timeout()
-    client = build_client(server_host, timeout, api_key=cfg.get("api_key"))
+    client = build_client(server_host, timeout, api_key)
     default_model_name = cfg.get("default") or None
     parser = build_parser()
     args = parser.parse_args()

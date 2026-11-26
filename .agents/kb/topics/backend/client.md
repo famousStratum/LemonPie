@@ -3,7 +3,7 @@ id: 20261117-http-client
 title: HTTP backend client
 tags: [backend]
 created: 2026-11-17
-updated: 2026-11-24
+updated: 2026-11-26
 related: [20261117-project-structure, 20261117-config-format]
 summary: How lemonpie talks to AI backends — a unified OpenAI-compatible HTTP client (client.py) supporting Ollama, llama.cpp, LM Studio, vLLM, and hosted APIs.
 ---
@@ -34,8 +34,12 @@ The `backend` field in `config.json` is recorded by `lmConfig --init` for identi
 | Config field | Used for |
 |---|---|
 | `server` | Base URL — the client appends `/v1/chat/completions` |
-| `api_key` | Bearer token; `null` for unauthenticated local servers |
+| `api_key` | Bearer token; `null` for unauthenticated local servers. `LEMONPIE_API_KEY` overrides it at runtime |
 | `backend` | Backend name (identification only; set by `lmConfig --init`) |
+
+## Authentication
+
+`build_client(server_host, timeout, api_key)` sends `Authorization: Bearer <api_key>` on every request when a key is set. `main.py` resolves the key with `config.resolve_api_key`, so `LEMONPIE_API_KEY` wins over the config value. `lmConfig --init` probes `GET /v1/models` through the same client; a 401/403 response triggers its API key prompt.
 
 ## Streaming
 

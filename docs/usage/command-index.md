@@ -9,14 +9,16 @@ Useful for both **users** (cheat sheet) and **developers** (tracking CLI surface
 
 Manage LemonPie configuration (`config.json`).
 
-- `--init` — Interactive setup wizard: select backend, configure server URL (local default or custom), verify reachability, list and select installed models, optionally set a default
+- `--init` — Interactive setup wizard: select backend, configure server URL (local default or custom), verify reachability, list and select installed models, optionally set a default. If the server answers 401/403, prompts for an API key (hidden input) and retries; a key from `LEMONPIE_API_KEY` is tried first and never saved
 - `--init --force` — Same as `--init` but skip server verification
 - `--host <url>` — Set server host URL (`http(s)://host:port`)
 - `--default-model <name>` — Set default model using alias or full name (must exist in models)
 - `--add-model <alias> <model>` — Add model mapping: alias → model_full_name
 - `--remove-model <identifier>` — Remove a model mapping by alias or full name
 - `--list-models` — List configured model aliases and names
-- `--show` — Print full `config.json`
+- `--api-key [<key>]` — Set or update the API key. Omit `<key>` to be prompted without echo (keeps it out of shell history and the process list)
+- `--remove-api-key` — Remove the API key from the config
+- `--show` — Print `config.json` (the API key is masked)
 - `--force` — Force overwrite when adding a model; skip server verification when used with `--init`
 
 ---
@@ -50,4 +52,5 @@ Start and manage chat sessions.
   ```
 
 - `--force` applies to `lmConfig --add-model` (overwrite alias conflicts) and `lmConfig --init` (skip server verification).
+- `LEMONPIE_API_KEY` overrides the `api_key` value in `config.json` at runtime, and is used (but never saved) by `lmConfig --init`.
 - Future flags will be added here as they are introduced.

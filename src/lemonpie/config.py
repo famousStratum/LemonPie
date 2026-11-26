@@ -9,7 +9,11 @@ from lemonpie.paths import CONFIG_FILE
 
 def save_config(cfg):
     tmp = CONFIG_FILE + ".tmp"
-    with open(tmp, "w", encoding="utf-8") as f:
+    # The file can hold an API key, so create it owner-only (0o600). The mode
+    # is effectively ignored on Windows, where the profile directory is
+    # already per-user.
+    fd = os.open(tmp, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+    with os.fdopen(fd, "w", encoding="utf-8") as f:
         json.dump(cfg, f, indent=2, ensure_ascii=False)
     os.replace(tmp, CONFIG_FILE)
 
@@ -41,6 +45,10 @@ def load_config():
 
 def resolve_server_host(cfg):
     return os.environ.get("LEMONPIE_HOST") or cfg.get("server")
+
+
+def resolve_api_key(cfg):
+    return os.environ.get("LEMONPIE_API_KEY") or cfg.get("api_key")
 
 
 def is_valid_url(url):

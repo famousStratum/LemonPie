@@ -10,9 +10,12 @@ Usage examples:
   lmConfig --default-model qwen                    # Set default by alias or name
   lmConfig --remove-model qwen                     # Clear alias or remove model
   lmConfig --list-models                           # View configured models
+  lmConfig --api-key                               # Set the API key (hidden prompt)
+  lmConfig --remove-api-key                        # Remove the stored API key
 """
 
 import argparse
+import getpass
 import json
 import os
 import sys
@@ -20,11 +23,13 @@ import sys
 import httpx2
 
 from lemonpie.cli.ui import confirm
+from lemonpie.client import build_client, resolve_error
 from lemonpie.config import (
     config_file_path,
     ensure_models_list,
     is_valid_url,
     load_config,
+    resolve_api_key,
     save_config,
 )
 from lemonpie.models import (
@@ -192,25 +197,43 @@ def _prompt_default(models):
 # ---------------------------------------------------------------------------
 
 
-def fetch_available_models(server):
-    """GET /v1/models and return (list_of_name_strings, error_str_or_None).
+def _fetch_with_key(server, api_key=None):
+    """GET /v1/models with an optional API key.
 
-    Used by cmd_init to verify server reachability and discover installed
-    models in a single round-trip.
+    Returns (models, err, auth_err) where ``err`` is a human-readable
+    error message (or ``None`` on success) and ``auth_err`` is ``True``
+    when the server returned 401/403 — letting the caller prompt for an
+    API key without relying on string parsing.
     """
     try:
-        resp = httpx2.get(f"{server.rstrip('/')}/v1/models", timeout=5.0)
-        resp.raise_for_status()
-        data = resp.json()
-        return [m["id"] for m in data.get("data", [])], None
-    except httpx2.ConnectError:
-        return [], "Connection refused"
-    except httpx2.TimeoutException:
-        return [], "Connection timed out"
-    except httpx2.HTTPError as exc:
-        return [], f"HTTP error: {exc}"
-    except (json.JSONDecodeError, KeyError, TypeError) as exc:
-        return [], f"Invalid response format from server, {exc}"
+        with build_client(server, timeout=5.0, api_key=api_key) as client:
+            resp = client.get("/v1/models")
+            resp.raise_for_status()
+            data = resp.json()
+        return [m["id"] for m in data.get("data", [])], None, False
+    except httpx2.HTTPStatusError as exc:
+        status = exc.response.status_code
+        if status in (401, 403):
+            return [], "Server requires authentication", True
+        return [], f"Server returned HTTP {status}", False
+    except (httpx2.HTTPError, httpx2.InvalidURL) as exc:
+        # Connection, timeout, DNS, TLS and protocol failures. HTTPStatusError
+        # is handled above because it is a subclass of HTTPError.
+        message, _hint = resolve_error(exc, server)
+        return [], message, False
+    except (ValueError, KeyError, TypeError, AttributeError) as exc:
+        # Bad JSON (JSONDecodeError is a ValueError) or an unexpected shape.
+        return [], f"Invalid response format from server ({exc!r})", False
+
+
+def _print_probe_result(models, err):
+    """Finish the 'Connecting ...' status line that the caller started."""
+    if err:
+        print(f" failed.\n  {err}")
+        return
+    count = len(models)
+    label = f"{count} model(s) available" if count else "no models installed"
+    print(f" OK ({label})")
 
 
 # ---------------------------------------------------------------------------
@@ -228,7 +251,10 @@ def cmd_init(force=False):
     3. Prompt for server URL — local (default or custom) or remote.
     4. Unless ``--force``, verify server reachability via ``GET /v1/models``.
        - If reachable: present the installed-model list for selection.
-       - If unreachable: offer to continue without verification.
+       - If the server answers 401/403: prompt for an API key and retry
+         (a key from LEMONPIE_API_KEY is tried first and never saved).
+       - If unreachable or the key is rejected: offer to continue without
+         verification.
     5. If no server models are available, offer manual model entry.
     6. Optionally set a default model.
     7. Save and print a summary.
@@ -261,22 +287,41 @@ def cmd_init(force=False):
     # ------------------------------------------------------------------
     available_models: list[str] = []
     server_ok = False
+    api_key: str | None = None
 
     if force:
-        print("  Skipping server verification (--force).")
+        print(
+            "  Skipping server verification (--force).\n"
+            "  Use `lmConfig --api-key` later if your server needs a key."
+        )
     else:
+        # A key from LEMONPIE_API_KEY is used for the probe only; it is never
+        # written to the config file.
         print(f"  Connecting to {server} ...", end="", flush=True)
-        available_models, err = fetch_available_models(server)
+        available_models, err, auth_err = _fetch_with_key(server, resolve_api_key({}))
+        if auth_err:
+            print(" authentication required.")
+            raw_key = getpass.getpass(
+                "  Enter API key (or press Enter to skip): "
+            ).strip()
+            if raw_key:
+                print("  Retrying with API key ...", end="", flush=True)
+                available_models, err, auth_err = _fetch_with_key(server, raw_key)
+                if auth_err:
+                    err = "Server rejected the API key"
+                if not err:
+                    api_key = raw_key
+                _print_probe_result(available_models, err)
+            # Key skipped: err is still set, so the prompt below applies.
+        else:
+            _print_probe_result(available_models, err)
+
         if err:
-            print(f" failed.\n  {err}")
             if not confirm("  Continue without verification?"):
                 print("Aborted.")
                 return 1
         else:
             server_ok = True
-            count = len(available_models)
-            label = f"{count} model(s) available" if count else "no models installed"
-            print(f" OK ({label})")
 
     # ------------------------------------------------------------------
     # Step 4: Select / add models
@@ -302,7 +347,7 @@ def cmd_init(force=False):
     cfg = {
         "backend": backend,
         "server": server,
-        "api_key": None,
+        "api_key": api_key,
         "default": default,
         "models": models,
     }
@@ -508,8 +553,52 @@ def cmd_list_models(cfg):
     return 0
 
 
+# Sentinel: ``--api-key`` was given without a value, so ask for it without echo.
+_PROMPT_FOR_KEY = object()
+
+
+def _warn_if_env_key():
+    if os.environ.get("LEMONPIE_API_KEY"):
+        print(
+            "Note: LEMONPIE_API_KEY is set and takes precedence over the "
+            "config value at runtime."
+        )
+
+
+def cmd_set_api_key(cfg, api_key):
+    """Set or update the API key in the config.
+
+    Pass ``_PROMPT_FOR_KEY`` to read the key from a hidden prompt, which keeps
+    it out of shell history and the process list.
+    """
+    if api_key is _PROMPT_FOR_KEY:
+        api_key = getpass.getpass("Enter API key: ")
+    api_key = api_key.strip()
+    if not api_key:
+        print("No API key provided.")
+        return 2
+    cfg["api_key"] = api_key
+    save_config(cfg)
+    print("API key set.")
+    _warn_if_env_key()
+    return 0
+
+
+def cmd_clear_api_key(cfg):
+    """Remove the API key from the config."""
+    cfg["api_key"] = None
+    save_config(cfg)
+    print("API key removed.")
+    _warn_if_env_key()
+    return 0
+
+
 def cmd_show(cfg):
-    print(json.dumps(cfg, indent=2, ensure_ascii=False))
+    shown = dict(cfg)
+    key = shown.get("api_key")
+    if key:
+        shown["api_key"] = f"****{key[-4:]}" if len(key) >= 12 else "****"
+    print(json.dumps(shown, indent=2, ensure_ascii=False))
     return 0
 
 
@@ -549,6 +638,18 @@ def build_parser():
         action="store_true",
         help="List configured model aliases and names",
     )
+    parser.add_argument(
+        "--api-key",
+        nargs="?",
+        const=_PROMPT_FOR_KEY,
+        metavar="KEY",
+        help="Set or update the API key (omit KEY to be prompted without echo)",
+    )
+    parser.add_argument(
+        "--remove-api-key",
+        action="store_true",
+        help="Remove the API key from config",
+    )
     parser.add_argument("--show", action="store_true", help="Print full config.json")
     parser.add_argument(
         "--force",
@@ -582,6 +683,12 @@ def main():
 
     if args.remove_model:
         return cmd_remove_model(cfg, args.remove_model)
+
+    if args.api_key is not None:
+        return cmd_set_api_key(cfg, args.api_key)
+
+    if args.remove_api_key:
+        return cmd_clear_api_key(cfg)
 
     if args.list_models:
         return cmd_list_models(cfg)

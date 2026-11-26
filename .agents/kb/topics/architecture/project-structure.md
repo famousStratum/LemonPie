@@ -3,7 +3,7 @@ id: 20261117-project-structure
 title: Project structure
 tags: [architecture]
 created: 2026-11-17
-updated: 2026-11-24
+updated: 2026-11-26
 related: [20261117-http-client, 20261117-cli-commands, 20261117-session-storage]
 summary: Source layout of the lemonpie package — what each module does and how they relate.
 ---
@@ -23,7 +23,7 @@ and `lmConfig` (→ `cli.config_cmd:main`).
 ```
 src/lemonpie/
   main.py           # CLI session manager — entry point for `lm` / `lemonpie`
-  config.py         # Config load, save, and schema
+  config.py         # Config load, save, and runtime env overrides (LEMONPIE_HOST, LEMONPIE_API_KEY)
   paths.py          # OS-appropriate config/data directory resolution (via platformdirs)
   time_utils.py     # Timestamp helpers
   models.py         # Model alias resolution
@@ -43,8 +43,8 @@ src/lemonpie/
   and `sessions/storage.py` to persist history.
 - `paths.py` is a pure utility — both `config.py` and `sessions/storage.py` import it
   to find the right OS directory without duplicating platform logic.
-- `cli/config_cmd.py` is an independent entry point; it imports `config.py` and `paths.py`
-  but does not depend on `main.py`.
+- `cli/config_cmd.py` is an independent entry point; it imports `config.py`, `models.py`,
+  `cli/ui.py`, and `client.py` (to probe the server in `--init`) but does not depend on `main.py`.
 
 ## Build system
 

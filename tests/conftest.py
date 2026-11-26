@@ -83,3 +83,9 @@ def write_cfg(isolated_dirs, sample_cfg):
     """Write sample_cfg to the isolated config file and hand back the dict."""
     isolated_dirs["config_file"].write_text(json.dumps(sample_cfg), encoding="utf-8")
     return sample_cfg
+
+
+@pytest.fixture(autouse=True)
+def _no_env_api_key(monkeypatch):
+    """Keep a developer's real LEMONPIE_API_KEY from leaking into tests."""
+    monkeypatch.delenv("LEMONPIE_API_KEY", raising=False)

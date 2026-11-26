@@ -3,7 +3,7 @@ id: 20261117-cli-commands
 title: CLI commands
 tags: [cli]
 created: 2026-11-17
-updated: 2026-11-24
+updated: 2026-11-26
 related: [20261117-config-format, 20261117-session-storage]
 summary: Full flag reference for lm/lemonpie and lmConfig — every flag, its effect, and usage examples.
 ---
@@ -26,14 +26,16 @@ Manages `config.json`.
 
 | Flag | Description |
 |---|---|
-| `--init` | Interactive setup wizard: select backend, configure server URL, verify reachability, list and select installed models, optionally set a default |
+| `--init` | Interactive setup wizard: select backend, configure server URL, verify reachability, list and select installed models, optionally set a default. If the server answers 401/403, prompts for an API key (hidden input) and retries; a key from `LEMONPIE_API_KEY` is tried first and never saved |
 | `--init --force` | Same as `--init` but skip server verification |
 | `--host <url>` | Set server host URL (`http(s)://host:port`) |
 | `--default-model <name>` | Set default model using alias or full name (must exist in models list) |
 | `--add-model <alias> <model>` | Add a model mapping: alias → full model name |
 | `--remove-model <identifier>` | Remove a model mapping by alias or full name |
 | `--list-models` | List all configured model aliases and names |
-| `--show` | Print the full `config.json` |
+| `--api-key [<key>]` | Set or update the API key. Omit `<key>` to be prompted without echo (keeps it out of shell history) |
+| `--remove-api-key` | Remove the API key from the config |
+| `--show` | Print `config.json` (the API key is masked) |
 | `--force` | Force overwrite on alias conflict; skip server verification when used with `--init` |
 
 ### Examples
@@ -45,6 +47,8 @@ lmConfig --list-models
 lmConfig --remove-model qwen
 lmConfig --host http://192.168.1.10:11434
 lmConfig --default-model qwen
+lmConfig --api-key            # prompts without echo
+lmConfig --remove-api-key
 lmConfig --show
 ```
 
